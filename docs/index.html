@@ -1835,7 +1835,7 @@ var NL = (function () {
 
   /* ---------- 2 図をかく ---------- */
   VIEW.zu = function () {
-    var kind = REC.ui('zuKind') || 'mix', lv = REC.ui('zuLv') || '1';
+    var kind = 'per', lv = '1';   // タブを開いたら、いつも左端を選んだ状態から（2026-11-15 カワイさん）
     main.appendChild(el('div', '', say('文を読んで、<b>2本の数直線</b>をかこう。<br>① 線に名前　② 数を目もりに置く　③ 矢印。この3つを何度もくり返すと、どんな問題でも図がかけるようになるよ。')));
     main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('zuKind', k); fresh(); }));
     main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('zuLv', k); fresh(); }));
@@ -1862,7 +1862,7 @@ var NL = (function () {
 
   /* ---------- 3 式と答え ---------- */
   VIEW.shiki = function () {
-    var kind = REC.ui('skKind') || 'mix', lv = REC.ui('skLv') || '1';
+    var kind = 'per', lv = '1';
     main.appendChild(el('div', '', say('図はできているよ。<b>矢印を見て式を立てる</b>練習だ。<br>1の列と、わかっている列が矢印でつながっている。もう1本の線にも同じ×や÷をすれば、□が出るよ。')));
     main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('skKind', k); fresh(); }));
     main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('skLv', k); fresh(); }));
@@ -1902,7 +1902,7 @@ var NL = (function () {
   };
   function fullCfg(extra) { var c = { steps: ['read', 'label', 'place', 'arrow', 'expr', 'ans'], exprMode: 'build' }; for (var k in extra) c[k] = extra[k]; return c; }
   VIEW.bun = function () {
-    var lv = REC.ui('bunLv') || '2';
+    var lv = '1';
     var sayBox = el('div'); main.appendChild(sayBox);
     main.appendChild(chipRow(BUN_LV, lv, function (k) { lv = k; REC.ui('bunLv', k); fresh(); }));
     var card = el('div', 'card'); main.appendChild(card);
@@ -1928,7 +1928,7 @@ var NL = (function () {
 
   /* ---------- 5 はやさ ---------- */
   VIEW.haya = function () {
-    var mode = REC.ui('hyMode') || 'shiki';
+    var mode = 'shiki';
     var MODES = [{ k: 'shiki', h: '速さ・道のり・時間' }, { k: 'conv', h: '単位をかえる' }, { k: 'cmp', h: 'くらべる・考える' }];
     var SAYS = {
       shiki: '速さは「<b>1時間（1分・1秒）あたりに進む道のり</b>」。混みぐあいと同じ図でかけるよ。下の線が時間、上の線が道のり。',
@@ -2042,7 +2042,7 @@ var NL = (function () {
 
   /* ---------- 1 しくみ ---------- */
   VIEW.shikumi = function () {
-    var ex = REC.ui('shEx') || 'komi';
+    var ex = 'komi';
     var EX = [{ k: 'komi', h: '混みぐあい' }, { k: 'haya', h: '速さ' }, { k: 'three', h: '3つの式' }];
     main.appendChild(chipRow(EX, ex, function (k) { ex = k; REC.ui('shEx', k); run(); }));
     var card = el('div', 'card'); main.appendChild(card);
