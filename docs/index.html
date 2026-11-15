@@ -118,6 +118,7 @@ body.big .prob{font-size:26px}
 .opt.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);box-shadow:0 3px 0 var(--ok)}
 .opt.ng{border-color:var(--ng);background:var(--ng-soft);color:var(--ng);box-shadow:0 3px 0 var(--ng);opacity:.75}
 .opts.row{grid-template-columns:repeat(auto-fill,minmax(140px,210px))}
+.opts.one{grid-template-columns:minmax(0,max-content)}
 .opts.row .opt{text-align:center;font-size:24px;min-height:72px}
 .opt.dir{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
 .opt.dir .dv{font-size:26px;letter-spacing:.04em}
@@ -1356,6 +1357,7 @@ var NL = (function () {
     var opts = GEN.shuffle(R.exprOptions());
     R.eCtrl.innerHTML = '<div class="ask">□を求める式はどれ？<span class="sm">図の矢印を見て考えよう</span></div>' + R.exprHead() +
       '<div class="opts">' + opts.map(function (o) { return '<button class="opt" data-e="' + o.join(',') + '">□ ＝ ' + exprText(P, P[o[0]], o[1], P[o[2]]) + '</button>'; }).join('') + '</div>';
+    fitOpts(R.eCtrl);
     R.eCtrl.onclick = function (e) {
       var b = e.target.closest('[data-e]'); if (!b || R.cur() !== 'expr' || R.exprDone) return;
       var o = b.getAttribute('data-e').split(',');
@@ -1453,6 +1455,13 @@ var NL = (function () {
   };
 
   /* ---------- 「つぎへ」ボタン ---------- */
+  // 選択肢の字がボタンからはみ出すときは、1列（はばは文字に合わせる）にする
+  function fitOpts(box) {
+    [].forEach.call(box.querySelectorAll('.opts'), function (o) {
+      var over = [].some.call(o.querySelectorAll('.opt'), function (b) { return b.scrollWidth > b.clientWidth + 1; });
+      if (over) o.classList.add('one');
+    });
+  }
   function nextBtn(host, label, fn) {
     var b = el('button', 'next', label || 'つぎの問題へ ▶');
     b.onclick = function () { b.disabled = true; fn(); };
