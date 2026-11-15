@@ -153,6 +153,11 @@ body.big .prob{font-size:26px}
 .fb.ng{background:#fff4e5;color:#7a4300;border:2px solid #f5c98a}
 .fb.info{background:var(--teal-soft);color:#0b5f59;border:2px solid #a6e2db}
 .fb b{font-weight:700}
+.notego{margin:12px 0 4px;border:3px dashed var(--teal);border-radius:16px;padding:14px 18px 16px;background:var(--paper)}
+.notego .ng1{font-weight:900;font-size:22px;color:#0b6e68}
+.notego ol{margin:8px 0 12px;padding-left:1.6em;font-size:19px;font-weight:700;line-height:1.75}
+.notego .nggo{display:block;width:100%;min-height:58px;border-radius:14px;background:var(--teal);color:#fff;font-size:20px;font-weight:800;box-shadow:0 4px 0 #0b7a73}
+.notego.done{border-style:solid;border-width:2px;background:#e9f7f5;padding:8px 14px;font-weight:700;font-size:16px;color:#0b6e68}
 .next{display:block;width:100%;margin-top:14px;min-height:62px;border-radius:16px;background:var(--navy2);color:#fff;font-size:22px;font-weight:700;box-shadow:0 4px 0 var(--navy)}
 .next:active{transform:translateY(2px);box-shadow:0 2px 0 var(--navy)}
 .btn2{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;font-weight:700;font-size:15px;min-height:44px}
@@ -220,6 +225,8 @@ body.big .prob{font-size:26px}
   main{padding:10px 10px 100px}
   .card{padding:14px 12px}
   .prob{font-size:20px}
+  .notego .ng1{font-size:20px}
+  .notego ol{font-size:17px}
   .slnav{gap:8px}
   .slnav .pv{width:92px;font-size:16px;padding:0 4px}
   .slnav .dots{display:none}
@@ -1864,11 +1871,33 @@ var NL = (function () {
   };
 
   /* ---------- 6 うでだめし ---------- */
+  // 1問ごとに「ノートに図をかこう」を出し、「かいた」をおすまで答える所を見せない
+  var NOTE_STEPS = {
+    conv: ['2本の線をかいて、単位を書く', '1と、わかっている数を目もりに', '×60・÷60（×1000・÷1000）を矢印に'],
+    trick: ['2つの場面を、それぞれ2本の数直線に', 'そろっている量に印をつける', 'ちがう方の量でくらべる'],
+    def: ['2本の線をかいて、名前をつける', '1・わかる数・□を目もりに置く', '矢印をかいて、×か÷を書く']
+  };
+  function noteGate(host, c) {
+    var prob = host.querySelector('.prob'); if (!prob) return;
+    var top = prob; while (top.parentNode !== host) top = top.parentNode;
+    var rest = [], n = top.nextSibling;
+    while (n) { if (n.nodeType === 1) rest.push([n, n.style.display]); n = n.nextSibling; }
+    var st = NOTE_STEPS[c] || NOTE_STEPS.def;
+    var g = el('div', 'notego', '<div class="ng1">✏️ まず、ノートに図をかこう</div>' +
+      '<ol>' + st.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ol>' +
+      '<button class="nggo">図をかいた！ 答えを求める ▶</button>');
+    host.insertBefore(g, top.nextSibling);
+    rest.forEach(function (x) { x[0].style.display = 'none'; });
+    $('.nggo', g).onclick = function () {
+      g.className = 'notego done'; g.innerHTML = '✏️ ノートにかいた図を見ながら、答えを求めよう';
+      rest.forEach(function (x) { x[0].style.display = x[1]; });
+    };
+  }
   var CAT = { per: '1あたりを求める', total: '全体を求める', count: 'いくつ分を求める', cmp: 'くらべる', two: '2だんかい', conv: '単位をかえる', trick: '考え方' };
   var CAT_GO = { per: 'shiki', total: 'shiki', count: 'shiki', cmp: 'bun', two: 'bun', conv: 'haya', trick: 'haya' };
   VIEW.test = function () {
     var b = REC.d.test.best;
-    main.appendChild(el('div', '', say('10問のうでだめし。図は「図を見る」をおすと出るよ。<b>ノートに図をかいてから</b>答えよう。' + (b != null ? '<br>これまでのいちばん：<b>' + b + '問</b>' : ''))));
+    main.appendChild(el('div', '', say('10問のうでだめし。1問ずつ、<b>まずノートに図をかいてから</b>答えよう。図がかければ、式が立つよ。' + (b != null ? '<br>これまでのいちばん：<b>' + b + '問</b>' : ''))));
     var card = el('div', 'card'); main.appendChild(card);
     card.innerHTML = '<button class="next">うでだめしを始める ▶</button>';
     card.firstChild.onclick = start;
@@ -1906,6 +1935,7 @@ var NL = (function () {
         else if (it.c === 'two') TwoRunner(host, q, { quick: true, qno: qno, onDone: done });
         else if (it.c === 'conv') ConvertRunner(host, q, { qno: qno, hideVis: true, onDone: done });
         else TrickRunner(host, q, { qno: qno, onDone: done });
+        noteGate(host, it.c);
       }
       function result() {
         var sc = res.filter(Boolean).length;
