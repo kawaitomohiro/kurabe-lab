@@ -1,0 +1,2173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>くらべ方ラボ</title>
+<meta name="description" content="5年算数 単位量あたりの大きさ・速さを、2本の数直線で図にかいて、式を立てて、何度でも練習できるアプリ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f6; --paper:#fffef9; --card:#ffffff; --ink:#1d2433; --sub:#677184; --line:#d5dde6;
+  --navy:#173a5e; --navy2:#22517f; --teal:#13a39a; --teal-soft:#dff5f2;
+  --top:#2867d8; --top-soft:#e4edfd; --bot:#e2731c; --bot-soft:#fdeedf;
+  --one:#ffd23f; --one-line:#d9a400; --one-soft:rgba(255,210,63,.22);
+  --arrow:#1f9a5c; --ok:#1f9a5c; --ok-soft:#e1f5ea; --ng:#e04848; --ng-soft:#fde8e8;
+  --grid:#e6edf5; --shadow:0 2px 0 rgba(23,58,94,.08), 0 6px 18px rgba(23,58,94,.07);
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;font-size:18px;line-height:1.7;
+  -webkit-text-size-adjust:100%}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
+.maru{font-family:"Zen Maru Gothic","BIZ UDPGothic",sans-serif}
+
+/* ---------- 上の帯 ---------- */
+.bar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.bar-in{max-width:900px;margin:0 auto;padding:8px 14px 0;display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:22px;letter-spacing:.04em;white-space:nowrap}
+.logo small{display:block;font-size:11px;font-weight:500;opacity:.75;letter-spacing:0;line-height:1}
+.stat{margin-left:auto;font-size:13px;opacity:.9;text-align:right;line-height:1.3;white-space:nowrap}
+.stat b{font-size:18px;color:var(--one)}
+.fsbtn{background:rgba(255,255,255,.14);border-radius:10px;padding:4px 10px;font-size:14px;color:#fff;min-height:36px}
+.tabs{max-width:900px;margin:0 auto;display:flex;gap:4px;padding:8px 10px 0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;min-width:92px;padding:9px 10px 10px;border-radius:12px 12px 0 0;background:rgba(255,255,255,.08);color:#d5e3f2;font-weight:700;font-size:15px;line-height:1.2;text-align:center}
+.tab .n{display:block;font-size:11px;opacity:.75;font-weight:500}
+.tab.on{background:var(--bg);color:var(--navy)}
+
+/* ---------- 本体 ---------- */
+main{max-width:900px;margin:0 auto;padding:14px 14px 120px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;margin:0 0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.chip{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:15px;min-height:42px;color:var(--sub)}
+.chip.on{border-color:var(--navy2);background:var(--navy2);color:#fff}
+.chip .lv{display:inline-block;background:var(--one);color:#3a2e00;border-radius:999px;font-size:12px;padding:0 7px;margin-right:6px}
+.chip.on .lv{background:#fff;color:var(--navy2)}
+
+/* 博士 */
+.hk{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px}
+.hk svg{flex:0 0 auto}
+.bub{position:relative;background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:12px 18px;font-size:21px;line-height:1.65;font-weight:700;color:var(--ink);letter-spacing:.01em;flex:1}
+body.big .bub{font-size:24px}
+.bub:before{content:"";position:absolute;left:-9px;top:18px;width:14px;height:14px;background:var(--paper);border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.bub b{color:var(--navy2)}
+
+/* 問題文 */
+.prob{font-size:22px;line-height:1.85;font-weight:700;letter-spacing:.02em;margin:2px 0 6px}
+body.big .prob{font-size:26px}
+.prob .ic{font-size:26px;margin-right:6px}
+.tok{display:inline-block;padding:0 6px;margin:0 1px;border-radius:8px;background:#fff6c9;border-bottom:3px solid #f2c200;line-height:1.35;font-size:1.08em}
+.tok.tap{cursor:pointer;background:#f3f5f8;border-bottom-color:#b9c2cf}
+.tok.got{background:#fff0a6;border-bottom-color:#e2b100;animation:pop .35s}
+.tok.top{background:var(--top-soft);border-bottom-color:var(--top);color:var(--top)}
+.tok.bot{background:var(--bot-soft);border-bottom-color:var(--bot);color:var(--bot)}
+.askline{display:inline;background:linear-gradient(transparent 62%, rgba(19,163,154,.28) 62%)}
+.qno{display:inline-block;background:var(--navy);color:#fff;border-radius:8px;font-size:14px;padding:1px 9px;margin-right:8px;vertical-align:3px}
+
+/* 手順 */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 10px}
+.st{font-size:14px;font-weight:700;border-radius:999px;padding:4px 12px;background:#e9eef3;color:#8a93a3}
+.st.now{background:var(--navy2);color:#fff;box-shadow:0 0 0 3px rgba(34,81,127,.18)}
+.st.done{background:var(--ok-soft);color:var(--ok)}
+.st.done:before{content:"✓ "}
+
+/* 数直線の箱（方眼ノート） */
+.nlbox{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;border:2px solid var(--line);border-radius:14px;overflow:hidden;display:flex;justify-content:center;min-height:120px}
+.nl{display:block;max-width:100%;height:auto;user-select:none;-webkit-user-select:none}
+.nl text{font-family:"BIZ UDPGothic",sans-serif}
+.nl .tap{cursor:pointer}
+.nl .colg{transition:transform .9s cubic-bezier(.5,0,.2,1)}
+.nl .slot.ready rect:first-child{stroke:var(--teal);stroke-width:3;animation:breathe 1.1s ease-in-out infinite}
+.nl .slot.picked rect:first-child{fill:#d6f4f0;stroke:var(--teal);stroke-width:3.5;stroke-dasharray:none}
+.nl .slot.picked .ring{animation:breathe 1s ease-in-out infinite}
+.tray.waiting .cardb:not(.used){border-color:var(--teal);animation:nudge 1.2s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateY(-3px);box-shadow:0 0 0 4px rgba(19,163,154,.25),0 3px 0 var(--teal)}}
+.nl .slot.hint rect:first-child{stroke:var(--one-line);fill:#fff7cc;stroke-width:3.5;stroke-dasharray:none}
+.nl .lab.hint rect{stroke:var(--one-line);fill:#fff7cc}
+.nl .val.wrong rect,.nl .val.wrong circle{stroke:var(--ng)!important;stroke-width:4;fill:var(--ng-soft)}
+.nl .val.wrong{animation:shake .45s}
+.nl .arw.grow{animation:fadein .7s ease both}
+@keyframes breathe{50%{stroke-opacity:.35}}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes pop{40%{transform:scale(1.15)}}
+.nlnote{font-size:13px;color:var(--sub);margin:6px 2px 0}
+
+/* 操作の場所 */
+.ctrl{margin-top:12px}
+.ask{font-weight:700;font-size:18px;margin:0 0 10px;color:var(--navy)}
+.ask .sm{font-weight:500;font-size:14px;color:var(--sub);display:block}
+.tray{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cardb{min-width:72px;min-height:56px;padding:6px 18px;border-radius:999px;background:var(--card);border:3px solid var(--line);font-size:24px;font-weight:700;box-shadow:0 3px 0 var(--line);transition:transform .12s}
+.cardb:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.cardb.one{background:var(--one);border-color:var(--one-line);box-shadow:0 3px 0 var(--one-line);border-radius:50%;min-width:58px;padding:6px}
+.cardb.q{border-radius:10px;color:var(--navy2);border-color:var(--navy2)}
+.cardb.sel{border-color:var(--teal);box-shadow:0 0 0 4px rgba(19,163,154,.3),0 3px 0 var(--teal);transform:translateY(-3px)}
+.cardb.used{visibility:hidden}
+.cardb.labc{font-size:18px;border-radius:14px;padding:8px 16px}
+.cardb.labc .u{font-size:14px;color:var(--sub);font-weight:500}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--card);border:3px solid var(--line);border-radius:14px;padding:12px 16px;font-size:20px;font-weight:700;min-height:56px;box-shadow:0 3px 0 var(--line)}
+.opt.wide{font-size:17px;line-height:1.55}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);box-shadow:0 3px 0 var(--ok)}
+.opt.ng{border-color:var(--ng);background:var(--ng-soft);color:var(--ng);box-shadow:0 3px 0 var(--ng);opacity:.75}
+.opts.row{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.opts.row .opt{text-align:center;font-size:24px}
+.opt.dir{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.opt.dir .dv{font-size:26px;letter-spacing:.04em}
+.opt.dir .dv .ar{color:var(--arrow);font-size:30px}
+.opt.dir .dl{font-size:14px;color:var(--sub);font-weight:500}
+
+/* 式 */
+.expr{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:30px;font-weight:700;margin:6px 0 12px}
+.expr .box{min-width:78px;height:58px;border:3px dashed #aab4c2;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;background:#fff;cursor:pointer}
+.expr .box.op{min-width:58px}
+.expr .box.f{border-style:solid;border-color:var(--navy2)}
+.expr .box.ng{border-color:var(--ng);background:var(--ng-soft)}
+.expr .eq{color:var(--sub)}
+.bigexpr{font-size:30px;font-weight:700;margin:4px 0 8px;letter-spacing:.02em}
+.bigexpr .q{display:inline-block;border:3px solid var(--navy2);border-radius:8px;min-width:44px;text-align:center;line-height:1.2;color:var(--navy2)}
+.sub2{font-size:16px;color:var(--sub);font-weight:500}
+
+/* キーパッド */
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:420px;margin-top:10px}
+.kp button{height:58px;border-radius:14px;background:var(--card);border:2px solid var(--line);font-size:26px;font-weight:700;box-shadow:0 3px 0 var(--line)}
+.kp button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.kp .ent{grid-row:span 2;height:auto;background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 3px 0 #0b7a73;font-size:20px}
+.kp .fn{font-size:17px;color:var(--sub)}
+.kp [data-k="."]{font-size:40px;line-height:.6;padding-bottom:12px}
+.ansrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:24px;font-weight:700}
+.kpval{min-width:150px;height:60px;border:3px solid var(--navy2);border-radius:12px;background:#fff;display:inline-flex;align-items:center;justify-content:flex-end;padding:0 14px;font-size:30px;letter-spacing:.03em}
+.kpval.empty{color:#b5bdc9}
+.kpval.ng{border-color:var(--ng);background:var(--ng-soft);animation:shake .45s}
+
+/* 返事 */
+.fb{margin-top:12px;border-radius:14px;padding:0;font-size:17px;line-height:1.7}
+.fb.show{padding:12px 16px}
+.fb.ok{background:var(--ok-soft);color:#13693f;border:2px solid #9fdcbc}
+.fb.ng{background:#fff4e5;color:#7a4300;border:2px solid #f5c98a}
+.fb.info{background:var(--teal-soft);color:#0b5f59;border:2px solid #a6e2db}
+.fb b{font-weight:700}
+.next{display:block;width:100%;margin-top:14px;min-height:62px;border-radius:16px;background:var(--navy2);color:#fff;font-size:22px;font-weight:700;box-shadow:0 4px 0 var(--navy)}
+.next:active{transform:translateY(2px);box-shadow:0 2px 0 var(--navy)}
+.btn2{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;font-weight:700;font-size:15px;min-height:44px}
+
+/* ノートの見本 */
+.note{background:var(--paper);border:2px solid #e3dccb;border-radius:14px;padding:12px 14px;margin-top:12px;position:relative}
+.note h4{margin:0 0 6px;font-size:15px;color:#8a6d1a}
+.note .nlbox{border:none;background-color:transparent}
+.note .ln{font-size:22px;font-weight:700;margin:4px 6px}
+
+/* 比べる表 */
+.ctab{border-collapse:separate;border-spacing:0;margin:6px 0 4px;font-size:19px;min-width:280px}
+.ctab th,.ctab td{padding:8px 14px;border-bottom:2px solid var(--line);text-align:right}
+.ctab th{font-size:14px;color:var(--sub);font-weight:700}
+.ctab td:first-child,.ctab th:first-child{text-align:left;font-weight:700}
+.ctab .c1{color:var(--bot)} .ctab .c2{color:var(--top)} .ctab .c3{color:var(--arrow)}
+.scr{overflow-x:auto}
+.barch{margin-top:8px}
+.barch .r{display:flex;align-items:center;gap:8px;margin:6px 0}
+.barch .nm{width:84px;font-weight:700;font-size:16px;flex:0 0 auto}
+.barch .b{height:30px;border-radius:8px;background:var(--top);min-width:4px;transition:width .8s}
+.barch .v{font-weight:700;font-size:16px;white-space:nowrap}
+.barch .r.best .b{background:var(--arrow)}
+
+/* しくみ */
+.slnav .cnt{display:none;font-weight:700;color:var(--sub);font-size:17px;white-space:nowrap}
+.scene{background:var(--paper);border:2px solid var(--line);border-radius:14px;overflow:hidden}
+.scene svg{display:block;width:100%;height:auto;max-height:calc(100vh - 120px)}
+.scene .rab{transition:transform 1.4s cubic-bezier(.5,0,.2,1)}
+.scene .fade{transition:opacity .6s}
+.slnav{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.slnav .dots{flex:1;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.slnav .dots i{width:10px;height:10px;border-radius:50%;background:#cfd7e0}
+.slnav .dots i.on{background:var(--navy2)}
+.slnav button{min-height:54px;border-radius:14px;font-weight:700;font-size:19px;flex:0 0 auto;white-space:nowrap}
+.slnav .pv{width:128px}
+.slnav .nx{width:172px;line-height:1.2}
+.slnav .pv{line-height:1.2}
+.slnav .pv{background:var(--card);border:2px solid var(--line)}
+.slnav .nx{background:var(--navy2);color:#fff}
+.slnav button:disabled{opacity:.35}
+
+/* うでだめし */
+.dots10{display:flex;gap:6px;margin:0 0 10px}
+.dots10 i{flex:1;height:8px;border-radius:4px;background:#d7dee6}
+.dots10 i.ok{background:var(--ok)} .dots10 i.ng{background:var(--ng)} .dots10 i.now{background:var(--navy2)}
+.res{display:grid;gap:8px}
+.res .r{display:flex;align-items:center;gap:10px}
+.res .nm{width:110px;font-weight:700;font-size:15px}
+.res .bg{flex:1;height:18px;background:#e7ecf1;border-radius:9px;overflow:hidden}
+.res .bg i{display:block;height:100%;background:var(--teal)}
+.score{font-size:48px;font-weight:900;color:var(--navy2)}
+
+.ladder{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.ladder .sp{border:3px solid var(--line);border-radius:12px;padding:6px 12px;font-weight:700;background:#fff;font-size:17px}
+.ladder .sp.on{border-color:var(--teal);background:var(--teal-soft)}
+.ladder .ar{font-size:14px;color:var(--arrow);font-weight:700;text-align:center;line-height:1.2}
+
+.foot{text-align:center;font-size:12px;color:var(--sub);margin-top:30px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--navy);color:#fff;border-radius:999px;padding:10px 22px;font-weight:700;transition:.3s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:560px){
+  body{font-size:17px}
+  main{padding:10px 10px 100px}
+  .card{padding:14px 12px}
+  .prob{font-size:20px}
+  .slnav{gap:8px}
+  .slnav .pv{width:92px;font-size:16px;padding:0 4px}
+  .slnav .dots{display:none}
+  .slnav .cnt{display:block;flex:1;min-width:0;text-align:center;font-size:15px}
+  .slnav .nx{width:136px;font-size:16px;padding:0 4px}
+  .bub{font-size:18px;padding:10px 14px}
+  body.big .bub{font-size:21px}
+  body.big .prob{font-size:23px}
+  .logo{font-size:19px}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;overflow:visible}
+  .tab{min-width:0;font-size:15px;padding:6px 4px 7px;border-radius:10px}
+  .expr{font-size:26px}
+  .bigexpr{font-size:25px}
+  .kp button{height:54px}
+  .kp .fn{font-size:14px;line-height:1.2}
+  .stat .lbl{display:none}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="bar-in">
+    <div class="logo maru"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M12 3h8v3h-1v7l8 13a3 3 0 0 1-2.6 4.5H7.6A3 3 0 0 1 5 26l8-13V6h-1z" fill="#fff" opacity=".95"/><path d="M8.5 22h15l2.2 3.6a1.6 1.6 0 0 1-1.4 2.4H7.7a1.6 1.6 0 0 1-1.4-2.4z" fill="#13a39a"/><circle cx="14" cy="25" r="1.4" fill="#ffd23f"/><circle cx="19" cy="24" r="1" fill="#fff"/></svg>
+      <div>くらべ方ラボ<small>単位量あたりの大きさ・速さ</small></div></div>
+    <div class="stat"><span class="lbl">きょう </span><b id="stToday">0</b> もん</div>
+    <button class="fsbtn" id="fsBtn" aria-label="文字の大きさ">あ 大</button>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</div>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+<script>
+/* ===== 問題を作る（場面の型 × 数の組） ===== */
+var GEN = (function () {
+  function rnd(n) { return Math.floor(Math.random() * n); }
+  function pick(a) { return a[rnd(a.length)]; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function range(s, e, st) { var r = []; for (var x = s; x <= e + 1e-9; x += (st || 1)) r.push(Math.round(x * 100) / 100); return r; }
+  // 小数の誤差をなくす
+  function fix(x) { return Math.round(x * 1e6) / 1e6; }
+  function fmt(x) { if (typeof x !== 'number') return String(x); var s = String(fix(x)); return s; }
+  function fmtC(x) { // 3けたごとのカンマ（大きい数だけ）
+    if (typeof x !== 'number') return String(x);
+    var s = fmt(x); var p = s.split('.');
+    if (Math.abs(x) >= 10000) p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return p.join('.');
+  }
+
+  /* 場面の一覧
+     top＝上の線（比べる量）、bot＝下の線（「〜あたり」の〜）
+     U＝1あたりの量の候補、B＝下の線の数の候補（いつも1より大きい）
+     per＝1あたりを求める、total＝全体を求める、count＝いくつ分を求める */
+  var CTX = [
+    { id: 'usagi', g: 'komi', topInt: true, decPerOnly: true, icon: '🐇', top: { n: 'うさぎの数', u: 'ひき' }, bot: { n: '面積', u: '㎡' },
+      perName: '1㎡あたりのうさぎの数', perAns: { pre: '', u: 'ひき' },
+      U: [2, 3, 4], B: range(3, 9), U2: [1.5, 2.5, 3.5], B2: [2, 4, 6, 8],
+      t: {
+        per: '面積が〔b〕㎡の小屋に、うさぎが〔a〕ひきいます。1㎡あたり何ひきですか。',
+        total: '1㎡あたり〔u〕ひきの混みぐあいで、うさぎを入れます。面積が〔b〕㎡の小屋には、何ひき入りますか。',
+        count: '1㎡あたり〔u〕ひきの混みぐあいで、うさぎを〔a〕ひき入れます。何㎡の小屋がいりますか。'
+      },
+      cmp: { what: '小屋', names: ['A', 'B', 'C'], q: 'いちばん混んでいるのはどれですか。', q2: '混んでいるのはどちらですか。', better: 'big',
+        good: '混んでいる', col: ['面積（㎡）', 'うさぎ（ひき）'] } },
+    { id: 'usagi_inv', g: 'komi', inv: true, botInt: true, icon: '🐇', top: { n: '面積', u: '㎡' }, bot: { n: 'うさぎの数', u: 'ひき' },
+      perName: '1ぴきあたりの面積', perAns: { pre: '', u: '㎡' },
+      U: [2, 3, 4], B: range(3, 9), U2: [1.5, 2.5], B2: [2, 4, 6],
+      t: {
+        per: '面積が〔a〕㎡の小屋に、うさぎが〔b〕ひきいます。うさぎ1ぴきあたりの面積は何㎡ですか。',
+        total: 'うさぎ1ぴきあたり〔u〕㎡の広さにします。うさぎが〔b〕ひきだと、何㎡の小屋がいりますか。',
+        count: 'うさぎ1ぴきあたり〔u〕㎡の広さにします。〔a〕㎡の小屋には、うさぎを何ひき入れられますか。'
+      },
+      cmp: { what: '小屋', names: ['A', 'B', 'C'], q: 'いちばん混んでいるのはどれですか。', q2: '混んでいるのはどちらですか。', better: 'small',
+        good: '混んでいる', col: ['面積（㎡）', 'うさぎ（ひき）'], swapCol: true } },
+    { id: 'sheet', g: 'komi', topInt: true, botInt: true, icon: '🧺', top: { n: '人数', u: '人' }, bot: { n: 'シートの数', u: 'まい' },
+      perName: 'シート1まいあたりの人数', perAns: { pre: '', u: '人' },
+      U: [3, 4, 5, 6], B: range(2, 8), U2: [], B2: [],
+      t: {
+        per: 'シート〔b〕まいに、〔a〕人がすわっています。シート1まいあたり何人ですか。',
+        total: 'シート1まいに〔u〕人ずつすわります。シートが〔b〕まいだと、何人すわれますか。',
+        count: 'シート1まいに〔u〕人ずつすわります。〔a〕人がすわるには、シートは何まいいりますか。'
+      },
+      cmp: { what: 'シート', names: ['A', 'B', 'C'], q: 'いちばん混んでいるのはどれですか。', q2: '混んでいるのはどちらですか。', better: 'big',
+        good: '混んでいる', col: ['シート（まい）', '人数（人）'] } },
+    { id: 'hatake', g: 'iro', icon: '🥔', top: { n: 'とれた量', u: 'kg' }, bot: { n: '面積', u: '㎡' },
+      perName: '1㎡あたりのとれた量', perAns: { pre: '', u: 'kg' },
+      U: [2, 3, 4, 5, 6], B: range(4, 12), U2: [1.5, 2.5, 3.5, 1.2, 2.4], B2: [5, 10, 20],
+      t: {
+        per: '〔b〕㎡の畑から、じゃがいもが〔a〕kgとれました。1㎡あたり何kgとれましたか。',
+        total: '1㎡あたり〔u〕kgのじゃがいもがとれる畑があります。〔b〕㎡の畑では、何kgとれますか。',
+        count: '1㎡あたり〔u〕kgのじゃがいもがとれる畑があります。〔a〕kgとるには、何㎡の畑がいりますか。'
+      },
+      cmp: { what: '畑', names: ['A', 'B', 'C'], q: 'いちばんよくとれたのはどれですか。', q2: 'よくとれたのはどちらですか。', better: 'big',
+        good: 'よくとれた', goodR: '1㎡あたりでよくとれた', col: ['面積（㎡）', 'とれた量（kg）'] } },
+    { id: 'note', g: 'iro', botInt: true, icon: '📓', top: { n: '代金', u: '円' }, bot: { n: 'ノートの数', u: 'さつ' },
+      perName: 'ノート1さつのねだん', perAns: { pre: '', u: '円' },
+      U: [80, 90, 120, 150], B: range(3, 8), U2: [85, 95, 110], B2: [4, 6, 10],
+      t: {
+        per: 'ノートを〔b〕さつ買うと、代金は〔a〕円でした。ノート1さつのねだんは何円ですか。',
+        total: '1さつ〔u〕円のノートを〔b〕さつ買います。代金は何円ですか。',
+        count: '1さつ〔u〕円のノートを、〔a〕円分買います。ノートは何さつ買えますか。'
+      },
+      cmp: { what: 'ノート', names: ['A', 'B', 'C'], q: '1さつあたりがいちばん安いのはどれですか。', q2: '1さつあたりが安いのはどちらですか。', better: 'small',
+        good: '安い', goodR: '1さつあたりが安い', col: ['さつ数（さつ）', '代金（円）'] } },
+    { id: 'juice', g: 'iro', icon: '🧃', top: { n: '代金', u: '円' }, bot: { n: '量', u: 'L' },
+      perName: '1Lあたりのねだん', perAns: { pre: '', u: '円' },
+      U: [120, 140, 160, 180, 200], B: [2, 3, 4, 5, 6], U2: [], B2: [1.5, 2.5, 3.5],
+      t: {
+        per: 'ジュース〔b〕Lのねだんは〔a〕円です。1Lあたり何円ですか。',
+        total: '1Lあたり〔u〕円のジュースを〔b〕L買います。代金は何円ですか。',
+        count: '1Lあたり〔u〕円のジュースを〔a〕円分買います。何L買えますか。'
+      },
+      cmp: { what: 'ジュース', names: ['A', 'B', 'C'], q: '1Lあたりがいちばん安いのはどれですか。', q2: '1Lあたりが安いのはどちらですか。', better: 'small',
+        good: '安い', goodR: '1Lあたりが安い', col: ['量（L）', '代金（円）'] } },
+    { id: 'harigane', g: 'iro', icon: '🪡', top: { n: '重さ', u: 'g' }, bot: { n: '長さ', u: 'm' },
+      perName: '1mあたりの重さ', perAns: { pre: '', u: 'g' },
+      U: [15, 20, 25, 30, 40], B: range(3, 9), U2: [12.5, 7.5, 2.5], B2: [2, 4, 6, 8],
+      t: {
+        per: '長さ〔b〕mで、重さが〔a〕gのはり金があります。このはり金1mあたりの重さは何gですか。',
+        total: '1mあたりの重さが〔u〕gのはり金があります。このはり金〔b〕mの重さは何gですか。',
+        count: '1mあたりの重さが〔u〕gのはり金があります。このはり金〔a〕gの長さは何mですか。'
+      } },
+    { id: 'gas', g: 'iro', icon: '🚗', top: { n: '道のり', u: 'km' }, bot: { n: 'ガソリン', u: 'L' },
+      perName: 'ガソリン1Lあたりに走る道のり', perAns: { pre: '', u: 'km' },
+      U: [12, 15, 18, 20, 24], B: range(3, 10), U2: [12.5, 14.5, 16.5], B2: [2, 4, 6],
+      t: {
+        per: 'ガソリン〔b〕Lで〔a〕km走る車があります。ガソリン1Lあたり何km走りますか。',
+        total: 'ガソリン1Lあたり〔u〕km走る車があります。ガソリン〔b〕Lでは何km走りますか。',
+        count: 'ガソリン1Lあたり〔u〕km走る車があります。〔a〕km走るには、ガソリンは何Lいりますか。'
+      },
+      cmp: { what: '車', names: ['A', 'B', 'C'], q: 'ガソリン1Lあたりでいちばん長く走るのはどれですか。', q2: 'ガソリン1Lあたりで長く走るのはどちらですか。', better: 'big',
+        good: '長く走る', goodR: 'ガソリン1Lあたりで長く走る', col: ['ガソリン（L）', '道のり（km）'] } },
+    { id: 'print', g: 'iro', topInt: true, icon: '🖨️', top: { n: 'まい数', u: 'まい' }, bot: { n: '時間', u: '分' },
+      perName: '1分間あたりに印刷するまい数', perAns: { pre: '', u: 'まい' },
+      U: [40, 50, 60, 75, 80], B: range(3, 8), U2: [45, 55, 65], B2: [2, 4, 6],
+      t: {
+        per: '〔b〕分間で〔a〕まい印刷できる印刷機があります。1分間あたり何まい印刷できますか。',
+        total: '1分間に〔u〕まい印刷できる印刷機があります。〔b〕分間では何まい印刷できますか。',
+        count: '1分間に〔u〕まい印刷できる印刷機で、〔a〕まい印刷します。何分かかりますか。'
+      },
+      cmp: { what: '印刷機', names: ['A', 'B', 'C'], q: 'いちばん速く印刷できるのはどれですか。', q2: '速く印刷できるのはどちらですか。', better: 'big',
+        good: '速い', goodR: '1分間あたりで速く印刷できる', col: ['時間（分）', 'まい数（まい）'] } },
+    { id: 'water', g: 'iro', icon: '🚰', top: { n: '水の量', u: 'L' }, bot: { n: '時間', u: '分' },
+      perName: '1分間あたりに出る水の量', perAns: { pre: '', u: 'L' },
+      U: [6, 8, 12, 15], B: range(3, 9), U2: [2.5, 4.5, 7.5], B2: [2, 4, 6],
+      t: {
+        per: 'じゃ口から、〔b〕分間で〔a〕Lの水が出ました。1分間あたり何Lの水が出ましたか。',
+        total: 'じゃ口から、1分間に〔u〕Lの水が出ます。〔b〕分間では何Lの水が出ますか。',
+        count: 'じゃ口から、1分間に〔u〕Lの水が出ます。〔a〕Lの水をためるには、何分かかりますか。'
+      } },
+    { id: 'walk', g: 'haya', icon: '🚶', top: { n: '道のり', u: 'm' }, bot: { n: '時間', u: '分' },
+      perName: '分速', perAns: { pre: '分速', u: 'm' }, speed: true,
+      U: [60, 65, 70, 75, 80], B: range(5, 20), U2: [60, 70, 80], B2: [2.5, 4.5, 7.5],
+      t: {
+        per: '〔a〕mの道のりを〔b〕分で歩きました。歩いた速さは、分速何mですか。',
+        total: '分速〔u〕mで〔b〕分歩きます。何m進みますか。',
+        count: '分速〔u〕mで〔a〕m歩きます。何分かかりますか。'
+      },
+      cmp: { what: '人', names: ['あおい', 'ゆうと', 'さくら'], q: 'いちばん速いのはだれですか。', q2: '速いのはどちらですか。', better: 'big',
+        good: '速い', col: ['時間（分）', '道のり（m）'] } },
+    { id: 'bike', g: 'haya', icon: '🚲', top: { n: '道のり', u: 'm' }, bot: { n: '時間', u: '分' },
+      perName: '分速', perAns: { pre: '分速', u: 'm' }, speed: true,
+      U: [200, 220, 240, 250, 300], B: range(4, 15), U2: [200, 240], B2: [2.5, 3.5, 4.5],
+      t: {
+        per: '自転車で、〔a〕mの道のりを〔b〕分で走りました。分速何mですか。',
+        total: '自転車で、分速〔u〕mで〔b〕分走ります。何m進みますか。',
+        count: '自転車で、分速〔u〕mで〔a〕m走ります。何分かかりますか。'
+      } },
+    { id: 'car', g: 'haya', icon: '🚙', top: { n: '道のり', u: 'km' }, bot: { n: '時間', u: '時間' },
+      perName: '時速', perAns: { pre: '時速', u: 'km' }, speed: true,
+      U: [40, 45, 50, 60, 80], B: [2, 3, 4, 5, 6], U2: [40, 50, 60, 80], B2: [1.5, 2.5, 3.5],
+      t: {
+        per: '自動車が、〔a〕kmの道のりを〔b〕時間で走りました。時速何kmですか。',
+        total: '時速〔u〕kmの自動車が、〔b〕時間走ります。何km進みますか。',
+        count: '時速〔u〕kmの自動車で、〔a〕km走ります。何時間かかりますか。'
+      },
+      cmp: { what: '自動車', names: ['A', 'B', 'C'], q: 'いちばん速いのはどれですか。', q2: '速いのはどちらですか。', better: 'big',
+        good: '速い', col: ['時間（時間）', '道のり（km）'] } },
+    { id: 'train', g: 'haya', icon: '🚄', top: { n: '道のり', u: 'km' }, bot: { n: '時間', u: '時間' },
+      perName: '時速', perAns: { pre: '時速', u: 'km' }, speed: true,
+      U: [150, 200, 240, 250, 260], B: [2, 3], U2: [200, 240, 260], B2: [1.5, 2.5],
+      t: {
+        per: '新幹線が、〔a〕kmの道のりを〔b〕時間で走りました。時速何kmですか。',
+        total: '時速〔u〕kmで走る新幹線が、〔b〕時間走ります。何km進みますか。',
+        count: '時速〔u〕kmで走る新幹線で、〔a〕km進みます。何時間かかりますか。'
+      } },
+    { id: 'run', g: 'haya', icon: '🏃', top: { n: '道のり', u: 'm' }, bot: { n: '時間', u: '秒' },
+      perName: '秒速', perAns: { pre: '秒速', u: 'm' }, speed: true,
+      U: [5, 6, 7, 8], B: range(10, 20), U2: [5.5, 6.5, 7.5], B2: [10, 12, 14, 16, 18],
+      t: {
+        per: '〔a〕mを〔b〕秒で走りました。秒速何mですか。',
+        total: '秒速〔u〕mで〔b〕秒走ります。何m進みますか。',
+        count: '秒速〔u〕mで〔a〕m走ります。何秒かかりますか。'
+      },
+      cmp: { what: '人', names: ['あおい', 'ゆうと', 'さくら'], q: 'いちばん速いのはだれですか。', q2: '速いのはどちらですか。', better: 'big',
+        good: '速い', col: ['時間（秒）', '道のり（m）'] } }
+  ];
+  var JINKO = { id: 'jinko', g: 'komi', icon: '🏙️', top: { n: '人口', u: '人' }, bot: { n: '面積', u: 'km²' },
+    perName: '人口みつ度（1km²あたりの人口）', perAns: { pre: '', u: '人' }, round: true,
+    t: { per: '〔nm〕は、面積が〔b〕km²で、人口が〔a〕人です。人口みつ度を、四しゃ五入して整数で求めましょう。' },
+    cmp: { what: '町', names: ['みどり町', 'かぜ町', 'ひかり町'], q: 'いちばん混んでいる（人口みつ度が高い）のはどれですか。', q2: '人口みつ度が高いのはどちらですか。', better: 'big',
+      good: '混んでいる', col: ['面積（km²）', '人口（人）'] } };
+  var BYID = {}; CTX.forEach(function (c) { BYID[c.id] = c; }); BYID.jinko = JINKO;
+
+  // 文を〔 〕の所で切って、数の印をつける
+  function segs(tpl, vals) {
+    var out = []; var re = /〔(\w+)〕/g; var last = 0; var m;
+    while ((m = re.exec(tpl))) {
+      if (m.index > last) out.push({ t: tpl.slice(last, m.index) });
+      var k = m[1];
+      if (k === 'nm') out.push({ t: vals.nm });
+      else out.push({ n: vals[k], k: k });
+      last = re.lastIndex;
+    }
+    if (last < tpl.length) out.push({ t: tpl.slice(last) });
+    return out;
+  }
+  function segsText(sg) { return sg.map(function (s) { return s.t != null ? s.t : fmtC(s.n); }).join(''); }
+
+  /* 1つの問題（3つの用法）
+     lv: 1 整数 / 2 小数まじり */
+  function single(ctx, kind, lv) {
+    var u, b, tries = 0;
+    do {
+      var dec = lv >= 2 && Math.random() < 0.6;
+      var useU2 = ctx.U2.length && (!ctx.decPerOnly || kind === 'per'), useB2 = ctx.B2.filter(function (x) { return x > 1; }).length;
+      if (dec && useU2 && (!useB2 || Math.random() < 0.5)) { u = pick(ctx.U2); b = pick(ctx.B); }
+      else if (dec && useB2) { u = pick(ctx.U); b = pick(ctx.B2.filter(function (x) { return x > 1; })); }
+      else { u = pick(ctx.U); b = pick(ctx.B); }
+      tries++;
+    } while ((u === b || u === 1 || b <= 1 || fix(u * b) === u || fix(u * b) === b || !isNice(fix(u * b)) ||
+      (ctx.topInt && fix(u * b) !== Math.round(u * b)) || (ctx.botInt && b !== Math.round(b))) && tries < 80);
+    var a = fix(u * b);
+    var P = { type: 'single', ctx: ctx, kind: kind, u: u, b: b, a: a };
+    var tpl = ctx.t[kind];
+    P.segs = segs(tpl, { a: a, b: b, u: u });
+    P.text = segsText(P.segs);
+    P.given = kind === 'per' ? ['a', 'b'] : kind === 'total' ? ['u', 'b'] : ['u', 'a'];
+    P.ans = kind === 'per' ? u : kind === 'total' ? a : b;
+    P.ansPre = kind === 'per' ? ctx.perAns.pre : '';
+    P.ansUnit = kind === 'per' ? ctx.perAns.u : kind === 'total' ? ctx.top.u : ctx.bot.u;
+    P.expr = kind === 'per' ? { l: a, op: '÷', r: b, lk: 'a', rk: 'b' } : kind === 'total' ? { l: u, op: '×', r: b, lk: 'u', rk: 'b' } : { l: a, op: '÷', r: u, lk: 'a', rk: 'u' };
+    return P;
+  }
+  // 答えが小数第2位までで終わる数か
+  function isNice(x) { return Math.abs(Math.round(x * 100) - x * 100) < 1e-6; }
+
+  function pickCtx(groups, opt) {
+    opt = opt || {};
+    var list = CTX.filter(function (c) {
+      if (groups && groups.indexOf(c.g) < 0) return false;
+      if (c.inv && !opt.inv) return false;
+      if (opt.cmp && !c.cmp) return false;
+      return true;
+    });
+    return pick(list);
+  }
+  var KINDS = ['per', 'total', 'count'];
+
+  /* 比べる問題：2つか3つ */
+  function compare(ctx, n, lv) {
+    var items = [], tries = 0, names = ctx.cmp.names;
+    if (ctx.id === 'jinko') return jinkoCompare(n);
+    while (items.length < n && tries < 200) {
+      tries++;
+      var u = lv >= 2 ? pick(ctx.U.concat(ctx.U2)) : pick(ctx.U);
+      var b = pick(ctx.B.filter(function (x) { return x > 1; }));
+      var a = fix(u * b);
+      if (!isNice(a) || a !== Math.round(a)) continue;
+      // 1あたりが同じもの・下の数が同じもの・上の数が同じものは避ける（比べがいがあるように）
+      if (items.some(function (it) { return it.u === u || it.b === b || it.a === a; })) continue;
+      items.push({ nm: names[items.length], u: u, b: b, a: a });
+    }
+    // 「全体の数が多い＝1あたりも大きい」になっていない組を1つは入れる（数だけで決めるとまちがえるように）
+    var C = { type: 'compare', ctx: ctx, items: items, n: items.length };
+    finishCompare(C);
+    if (C.naiveRight && tries < 200) return compare(ctx, n, lv);
+    return C;
+  }
+  function finishCompare(C) {
+    var ctx = C.ctx, best = null;
+    C.items.forEach(function (it) {
+      if (!best) best = it;
+      else if (ctx.cmp.better === 'big' ? it.u > best.u : it.u < best.u) best = it;
+    });
+    C.best = best.nm;
+    // 上の数だけで比べたときの答え（混みぐあいなら「数が多い方」）
+    var naive = C.items.slice().sort(function (x, y) { return ctx.cmp.better === 'big' ? y.a - x.a : x.a - y.a; })[0];
+    C.naiveRight = naive.nm === best.nm;
+    C.q = C.n === 2 ? ctx.cmp.q2 : ctx.cmp.q;
+  }
+  function jinkoCompare(n) {
+    var ctx = JINKO, items = [], tries = 0;
+    while (items.length < n && tries < 300) {
+      tries++;
+      var b = 10 + rnd(60), a = (20 + rnd(200)) * 100; // 面積10〜69km²、人口2000〜21900人
+      var u = Math.round(a / b);
+      if (items.some(function (it) { return Math.abs(it.u - u) < 8 || it.b === b; })) continue;
+      items.push({ nm: ctx.cmp.names[items.length], u: u, b: b, a: a, exact: a / b });
+    }
+    var C = { type: 'compare', ctx: ctx, items: items, n: items.length, round: true };
+    finishCompare(C);
+    if (C.naiveRight) return jinkoCompare(n);
+    return C;
+  }
+  function jinkoSingle() {
+    var b = 10 + rnd(60), a = (20 + rnd(400)) * 100, u = Math.round(a / b);
+    if (Math.abs(a / b - u) > 0.49 && Math.abs(a / b - u) < 0.51) return jinkoSingle();
+    var nm = pick(['みどり町', 'かぜ町', 'ひかり町', 'そら市', 'いずみ町']);
+    var P = { type: 'single', ctx: JINKO, kind: 'per', u: u, b: b, a: a, round: true, nm: nm };
+    P.segs = segs(JINKO.t.per, { a: a, b: b, nm: nm });
+    P.text = segsText(P.segs);
+    P.given = ['a', 'b']; P.ans = u; P.ansPre = ''; P.ansUnit = '人';
+    P.expr = { l: a, op: '÷', r: b, lk: 'a', rk: 'b' };
+    return P;
+  }
+
+  /* かたほうがそろっている比べ（計算なしで比べられる） */
+  function sameOne(ctx) {
+    var sameBot = Math.random() < 0.5, tries = 0, it1, it2;
+    do {
+      tries++;
+      if (sameBot) { var b = pick(ctx.B); var u1 = pick(ctx.U), u2 = pick(ctx.U); it1 = { u: u1, b: b, a: fix(u1 * b) }; it2 = { u: u2, b: b, a: fix(u2 * b) }; }
+      else {
+        var combos = [];
+        ctx.U.forEach(function (u1) { ctx.U.forEach(function (u2) { if (u1 >= u2) return;
+          ctx.B.forEach(function (b1) { ctx.B.forEach(function (b2) { if (b1 > 1 && b2 > 1 && fix(u1 * b1) === fix(u2 * b2)) combos.push([u1, b1, u2, b2]); }); }); }); });
+        if (!combos.length) { sameBot = true; continue; }
+        var cb = pick(combos), sw = Math.random() < 0.5;
+        it1 = { u: cb[sw ? 2 : 0], b: cb[sw ? 3 : 1] }; it2 = { u: cb[sw ? 0 : 2], b: cb[sw ? 1 : 3] };
+        it1.a = fix(it1.u * it1.b); it2.a = fix(it2.u * it2.b);
+      }
+    } while ((!it1 || !it2 || it1.u === it2.u) && tries < 60);
+    it1.nm = ctx.cmp.names[0]; it2.nm = ctx.cmp.names[1];
+    var C = { type: 'same', ctx: ctx, items: [it1, it2], n: 2, sameBot: sameBot };
+    finishCompare(C);
+    return C;
+  }
+
+  /* 2段階（1あたりを出してから使う） */
+  function twoStep() {
+    var ctx = BYID[pick(['harigane', 'note', 'juice', 'gas', 'print', 'water'])];
+    var s1 = single(ctx, 'per', 1);
+    var useTotal = Math.random() < 0.5;
+    var P2, b2, a2, tries = 0;
+    do {
+      tries++;
+      b2 = pick(ctx.B.filter(function (x) { return x !== s1.b; }));
+      a2 = fix(s1.u * b2);
+    } while ((a2 === s1.a || !isNice(a2)) && tries < 30);
+    var kind2 = useTotal ? 'total' : 'count';
+    P2 = { type: 'single', ctx: ctx, kind: kind2, u: s1.u, b: b2, a: a2, fromStep1: true };
+    P2.given = kind2 === 'total' ? ['u', 'b'] : ['u', 'a'];
+    P2.ans = kind2 === 'total' ? a2 : b2;
+    P2.ansPre = ''; P2.ansUnit = kind2 === 'total' ? ctx.top.u : ctx.bot.u;
+    P2.expr = kind2 === 'total' ? { l: s1.u, op: '×', r: b2, lk: 'u', rk: 'b' } : { l: a2, op: '÷', r: s1.u, lk: 'a', rk: 'u' };
+    var Q = TWO_Q[ctx.id][kind2];
+    var segs1 = segs(TWO_Q[ctx.id].lead, { a: s1.a, b: s1.b });
+    var segs2 = segs(Q, { a: a2, b: b2 });
+    return { type: 'two', ctx: ctx, s1: s1, s2: P2, segs: segs1.concat([{ t: '' }], segs2), text: segsText(segs1) + segsText(segs2) };
+  }
+  var TWO_Q = {
+    harigane: { lead: '長さ〔b〕mで、重さが〔a〕gのはり金があります。', total: 'このはり金〔b〕mの重さは何gですか。', count: 'このはり金〔a〕gの長さは何mですか。' },
+    note: { lead: '同じノートを〔b〕さつ買うと、代金は〔a〕円でした。', total: 'このノートを〔b〕さつ買うと、代金は何円ですか。', count: 'このノートを〔a〕円分買うと、何さつ買えますか。' },
+    juice: { lead: 'ジュース〔b〕Lのねだんは〔a〕円です。', total: '同じジュースを〔b〕L買うと、何円ですか。', count: '同じジュースを〔a〕円分買うと、何L買えますか。' },
+    gas: { lead: 'ガソリン〔b〕Lで〔a〕km走る車があります。', total: 'この車は、ガソリン〔b〕Lで何km走りますか。', count: 'この車で〔a〕km走るには、ガソリンは何Lいりますか。' },
+    print: { lead: '〔b〕分間で〔a〕まい印刷できる印刷機があります。', total: 'この印刷機では、〔b〕分間で何まい印刷できますか。', count: 'この印刷機で〔a〕まい印刷するには、何分かかりますか。' },
+    water: { lead: 'じゃ口から、〔b〕分間で〔a〕Lの水が出ました。', total: '同じように出すと、〔b〕分間では何Lの水が出ますか。', count: '同じように出すと、〔a〕Lの水をためるには何分かかりますか。' }
+  };
+
+  /* 速さの単位をかえる */
+  function convert() {
+    var t = pick(['s2m', 'm2s', 'm2h', 'h2m', 'h2s', 'tdec', 'tdec', 'tmin']);
+    var s, m, h;
+    if (t === 's2m' || t === 'm2s') { s = pick([3, 4, 5, 6, 8, 10, 12, 15, 20]); m = s * 60; }
+    if (t === 'm2h' || t === 'h2m') { m = pick([50, 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000]); h = fix(m * 60 / 1000); }
+    if (t === 'h2s') { s = pick([5, 10, 15, 20, 25, 30]); h = fix(s * 3.6); m = s * 60; }
+    var Q;
+    if (t === 's2m') Q = { q: '秒速〔x〕mは、分速何mですか。', x: s, ans: m, pre: '分速', u: 'm', path: ['s', 'm'] };
+    if (t === 'm2s') Q = { q: '分速〔x〕mは、秒速何mですか。', x: m, ans: s, pre: '秒速', u: 'm', path: ['m', 's'] };
+    if (t === 'm2h') Q = { q: '分速〔x〕mは、時速何kmですか。', x: m, ans: h, pre: '時速', u: 'km', path: ['m', 'h'] };
+    if (t === 'h2m') Q = { q: '時速〔x〕kmは、分速何mですか。', x: h, ans: m, pre: '分速', u: 'm', path: ['h', 'm'] };
+    if (t === 'h2s') Q = { q: '時速〔x〕kmは、秒速何mですか。', x: h, ans: s, pre: '秒速', u: 'm', path: ['h', 's'] };
+    if (t === 'tdec') {
+      var mm = pick([6, 12, 15, 18, 24, 30, 36, 42, 45, 48, 54]), hh = pick([1, 2, 3]);
+      Q = { q: '〔h〕時間〔mm〕分は、何時間ですか。（小数で）', h: hh, mm: mm, ans: fix(hh + mm / 60), pre: '', u: '時間', time: true };
+    }
+    if (t === 'tmin') {
+      var d = pick([0.5, 0.25, 0.75, 0.2, 0.4, 0.6, 0.8, 0.1, 1.5, 1.2, 2.5]);
+      Q = { q: '〔d〕時間は、何分ですか。', d: d, ans: fix(d * 60), pre: '', u: '分', time: true, toMin: true };
+    }
+    Q.t = t;
+    Q.segs = segs(Q.q, Q);
+    Q.text = segsText(Q.segs);
+    return Q;
+  }
+
+  /* ひっかけ・判断（えらぶ問題） */
+  function trick() {
+    var t = pick(['add', 'sameDist', 'sameTime', 'onlyCount', 'inv', 'avg']);
+    var Q;
+    if (t === 'add') {
+      var v = pick([60, 70, 80, 200, 250]);
+      Q = { q: '学校から公園まで、行きも帰りも分速' + v + 'mで歩きました。行きと帰りを合わせた全体の速さは、分速何mですか。',
+        opts: ['分速' + v + 'm', '分速' + (v * 2) + 'm', '分速' + (v / 2) + 'm'], ans: 0,
+        why: '速さは「1分あたりに進む道のり」。行きも帰りも1分に' + v + 'mずつ進んだので、全体でも1分に' + v + 'm。速さはたし算しません。' };
+    } else if (t === 'sameDist') {
+      var d = pick([50, 80, 100]), t1 = 14 + rnd(5), t2 = t1 + 1 + rnd(3);
+      Q = { q: d + 'mを、あおいさんは' + t1 + '秒、ゆうとさんは' + t2 + '秒で走りました。速いのはどちらですか。理由もえらびましょう。',
+        opts: ['あおいさん。道のりが同じで、かかった時間が短いから', 'ゆうとさん。道のりが同じで、かかった時間が長いから', 'あおいさん。時間の数が小さいと、道のりが長いから'], ans: 0,
+        why: '道のりがそろっているので、かかった時間で比べられます。時間が短い方が速い。' };
+    } else if (t === 'sameTime') {
+      var tt = pick([10, 15, 20]), d1 = (30 + rnd(20)) * 10, d2 = d1 + (2 + rnd(5)) * 10;
+      Q = { q: tt + '分間で、Aの自転車は' + d1 + 'm、Bの自転車は' + d2 + 'm進みました。速いのはどちらですか。理由もえらびましょう。',
+        opts: ['B。時間が同じで、進んだ道のりが長いから', 'A。時間が同じで、進んだ道のりが短いから', 'どちらとも言えない。時間がわからないから'], ans: 0,
+        why: '時間がそろっているので、進んだ道のりで比べられます。長く進んだ方が速い。' };
+    } else if (t === 'onlyCount') {
+      var n1 = 10 + rnd(6), n2 = n1 - 1 - rnd(3);
+      Q = { q: 'A小屋にはうさぎが' + n1 + 'ひき、B小屋には' + n2 + 'ひきいます。A小屋の方が混んでいると言えますか。',
+        opts: ['言えない。小屋の面積がわからないから', '言える。うさぎの数が多いから', '言える。数が多い方がいつも混んでいるから'], ans: 0,
+        why: '混みぐあいは「数」と「面積」の2つの量で決まります。面積がわからないと比べられません。' };
+    } else if (t === 'inv') {
+      var p1 = pick([0.4, 0.5, 0.6]), p2 = fix(p1 + pick([0.1, 0.2]));
+      Q = { q: 'うさぎ1ぴきあたりの面積は、A小屋が' + p1 + '㎡、B小屋が' + p2 + '㎡です。混んでいるのはどちらですか。',
+        opts: ['A小屋。1ぴきあたりの面積がせまいから', 'B小屋。1ぴきあたりの面積の数が大きいから', 'どちらも同じ'], ans: 0,
+        why: '「1ぴきあたりの面積」は、小さいほど1ぴきが使える広さがせまい＝混んでいる。「1㎡あたりのひき数」とは大小が反対になります。' };
+    } else {
+      var w = pick([4, 5, 6]);
+      Q = { q: '1㎡あたり1.5ひき、ということは、小屋の中はどうなっていると考えますか。',
+        opts: ['うさぎが小屋全体に、ならして同じように散らばっている', 'どの1㎡にも、うさぎがちょうど1.5ひきずつ立っている', '半分のうさぎがいる'], ans: 0,
+        why: '1あたりの大きさは「ならした（平均した）」ときの数です。うさぎが半分になるわけではありません。' };
+    }
+    Q.t = t;
+    var order = shuffle([0, 1, 2]);
+    Q.opts = order.map(function (i) { return Q.opts[i]; });
+    Q.ans = order.indexOf(Q.ans);
+    return Q;
+  }
+
+  return { CTX: CTX, BYID: BYID, JINKO: JINKO, KINDS: KINDS, single: single, compare: compare, sameOne: sameOne, twoStep: twoStep,
+    convert: convert, trick: trick, jinkoSingle: jinkoSingle, pickCtx: pickCtx, pick: pick, shuffle: shuffle, rnd: rnd,
+    fmt: fmt, fmtC: fmtC, fix: fix, segs: segs, segsText: segsText, isNice: isNice };
+})();
+
+
+/* ===== 2本の数直線 =====
+   いつも同じ形・同じ色で描く。上の線＝青、下の線＝だいだい、1＝黄色の丸、□＝わく、矢印＝みどり。
+   S（状態）:
+     P      問題
+     flip   true なら上の線と下の線を入れかえて置いた（子どもが逆にえらんだ）
+     lab    { top: 'T'|'B'|null, bot: 'T'|'B'|null }  線の名前（T＝比べる量、B＝〜あたりの〜）
+     slot   { tL, tR, bL, bR: 'u'|'a'|'b'|'one'|null }
+     arrow  0 なし / 1 「1のある線」に？ / 2 「1のある線」に答え / 3 両方
+     prop   true なら目もりを長さどおりに置く
+     wrong  { slotId: true }  hint { slotId: true }  sel  えらんでいるカード
+*/
+var NL = (function () {
+  var uid = 0;
+  var F = function (x) { return GEN.fmtC(x); };
+
+  // そのカードに書く文字
+  function cardText(P, k) {
+    if (k === 'one') return '1';
+    var unknown = P.kind === 'per' ? 'u' : P.kind === 'total' ? 'a' : 'b';
+    if (k === unknown) return '□';
+    return F(P[k]);
+  }
+  // どのスロットに何が入るのが正しいか
+  function expected(S) {
+    return S.flip ? { tL: 'one', tR: 'b', bL: 'u', bR: 'a' } : { tL: 'u', tR: 'a', bL: 'one', bR: 'b' };
+  }
+  function arrowLabel(P) {
+    if (P.kind === 'count') return '×□';
+    return (P.kind === 'per' ? '÷' : '×') + F(P.b);
+  }
+  // 矢印の向き：わかっている列 → □の列
+  function arrowDir(P) { return P.kind === 'per' ? 'RL' : 'LR'; }
+
+  function lineInfo(P, which, S) {
+    var isT = (which === 'top') !== !!S.flip; // この線が「比べる量」か
+    var lab = S.lab ? S.lab[which] : (isT ? 'T' : 'B');
+    var q = lab === 'T' ? P.ctx.top : lab === 'B' ? P.ctx.bot : null;
+    return { q: q, color: which === 'top' ? 'var(--top)' : 'var(--bot)', soft: which === 'top' ? 'var(--top-soft)' : 'var(--bot-soft)' };
+  }
+
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function tw(s, fs) { // 文字の幅のめやす
+    var w = 0; String(s).split('').forEach(function (c) { w += /[ -~]/.test(c) ? fs * 0.6 : fs; }); return w;
+  }
+
+  /* 描く。W＝実際の横はば(px) */
+  function draw(S, W) {
+    var P = S.P, id = 'nl' + (++uid);
+    var narrow = W < 560;
+    var labW = narrow ? 86 : 118;
+    var x0 = labW + 18, xEnd = W - 18;
+    var span = xEnd - x0 - 18; // 0 から右はしまで
+    var zx = x0 + 6;
+    var topY = 118, botY = 218, H = 330;
+    // 列の位置
+    var fL = 0.30, fR = 0.80, propOK = false;
+    var pr = 0.84 / P.b;
+    if (P.b > 1 && span * pr >= 70 && (P.kind !== 'count' || S.final)) { propOK = true; } // いくつ分は、答えが出るまで位置で答えを見せない // 1の目もりが0に近すぎるときは見取り図のまま
+    var useProp = S.prop && propOK;
+    S._propUsed = useProp;
+    var xL = zx + span * (useProp ? pr : fL), xR = zx + span * (useProp ? 0.84 : fR);
+    var sxL = zx + span * fL, sxR = zx + span * fR; // 見取り図の位置（動かす前）
+    var fsV = narrow ? 19 : 22, fsL = narrow ? 16 : 17;
+    var o = [];
+    o.push('<svg class="nl" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="2本の数直線">');
+    o.push('<defs><marker id="' + id + 'h" markerWidth="12" markerHeight="12" refX="7" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" fill="var(--arrow)"/></marker>' +
+      '<marker id="' + id + 'q" markerWidth="12" markerHeight="12" refX="7" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" fill="var(--sub)"/></marker></defs>');
+
+    // 1 の列の帯（目じるし）
+    var oneIsL = true;
+    if (S.mode === 'show' || (S.slot && (S.slot.bL === 'one' || S.slot.tL === 'one'))) {
+      o.push('<g class="colg" style="transform:translateX(' + (S.anim ? (sxL - xL) : 0) + 'px)" data-col="L"><rect x="' + (xL - 22) + '" y="' + (topY - 46) + '" width="44" height="' + (botY - topY + 92) + '" rx="12" fill="var(--one-soft)"/></g>');
+    }
+
+    ['top', 'bot'].forEach(function (wh) {
+      var y = wh === 'top' ? topY : botY;
+      var info = lineInfo(P, wh, S);
+      // 線
+      o.push('<line x1="' + x0 + '" y1="' + y + '" x2="' + xEnd + '" y2="' + y + '" stroke="' + info.color + '" stroke-width="5" stroke-linecap="round"/>');
+      // 0
+      o.push('<line x1="' + zx + '" y1="' + (y - 12) + '" x2="' + zx + '" y2="' + (y + 12) + '" stroke="var(--ink)" stroke-width="3"/>');
+      o.push('<text x="' + zx + '" y="' + (wh === 'top' ? y - 22 : y + 38) + '" text-anchor="middle" font-size="' + fsV + '" font-weight="700" fill="var(--ink)">0</text>');
+      // 線の名前
+      var ly = y;
+      if (info.q) {
+        o.push('<g class="lab' + (S.mode !== 'show' && S.phase === 'label' ? ' tap' : '') + '" data-lab="' + wh + '">' +
+          '<rect x="4" y="' + (ly - 30) + '" width="' + (labW) + '" height="60" rx="12" fill="' + info.soft + '" stroke="' + info.color + '" stroke-width="2"/>' +
+          '<text x="' + (4 + labW / 2) + '" y="' + (ly - 4) + '" text-anchor="middle" font-size="' + fitFs(info.q.n, labW - 10, fsL) + '" font-weight="700" fill="' + info.color + '">' + esc(info.q.n) + '</text>' +
+          '<text x="' + (4 + labW / 2) + '" y="' + (ly + 19) + '" text-anchor="middle" font-size="' + (fsL - 1) + '" fill="var(--sub)">（' + esc(info.q.u) + '）</text></g>');
+      } else {
+        o.push('<g class="lab tap empty' + (S.labHint === wh ? ' hint' : '') + '" data-lab="' + wh + '"><rect x="4" y="' + (ly - 30) + '" width="' + labW + '" height="60" rx="12" fill="var(--card)" stroke="var(--sub)" stroke-width="2" stroke-dasharray="6 5"/>' +
+          '<text x="' + (4 + labW / 2) + '" y="' + (ly + 7) + '" text-anchor="middle" font-size="' + fsL + '" fill="var(--sub)">なに？</text></g>');
+      }
+    });
+
+    // 列（L と R）
+    ['L', 'R'].forEach(function (c) {
+      var x = c === 'L' ? xL : xR, sx = c === 'L' ? sxL : sxR;
+      var g = '<g class="colg" data-col="' + c + '" style="transform:translateX(' + (S.anim ? (sx - x) : 0) + 'px)">';
+      g += '<line x1="' + x + '" y1="' + (topY + 12) + '" x2="' + x + '" y2="' + (botY - 12) + '" stroke="var(--sub)" stroke-width="2" stroke-dasharray="5 6"/>';
+      ['t', 'b'].forEach(function (tb) {
+        var y = tb === 't' ? topY : botY;
+        var sid = tb + c, k;
+        g += '<line x1="' + x + '" y1="' + (y - 12) + '" x2="' + x + '" y2="' + (y + 12) + '" stroke="var(--ink)" stroke-width="3"/>';
+        if (S.mode === 'show') { k = expected(S)[sid]; }
+        else k = S.slot[sid];
+        var cy = tb === 't' ? y - 32 : y + 32;
+        if (k) {
+          var txt = cardText(P, k);
+          g += valMark(txt, k, x, cy, fsV, tb === 't' ? 'var(--top)' : 'var(--bot)', S, sid);
+        } else {
+          var picked = S.selSlot === sid;
+          var cls = 'slot tap' + (S.sel ? ' ready' : '') + (S.hint && S.hint[sid] ? ' hint' : '') + (picked ? ' picked' : '');
+          g += '<g class="' + cls + '" data-slot="' + sid + '"><rect x="' + (x - 34) + '" y="' + (cy - 22) + '" width="68" height="44" rx="12" fill="var(--card)" stroke="var(--sub)" stroke-width="2.5" stroke-dasharray="7 5"/>' +
+            (picked ? '<rect class="ring" x="' + (x - 41) + '" y="' + (cy - 29) + '" width="82" height="58" rx="17" fill="none" stroke="var(--teal)" stroke-width="3"/>' +
+              '<text x="' + x + '" y="' + (cy + 7) + '" text-anchor="middle" font-size="17" font-weight="700" fill="var(--teal)">ここ</text>' : '') +
+            '<rect x="' + (x - 40) + '" y="' + (cy - 28) + '" width="80" height="56" fill="transparent"/></g>';
+        }
+      });
+      g += '</g>';
+      o.push(g);
+    });
+
+    // 矢印
+    if (S.arrow) {
+      var dir = arrowDir(P), lab = arrowLabel(P);
+      var oneLine = S.flip ? 'top' : 'bot';
+      var other = oneLine === 'top' ? 'bot' : 'top';
+      o.push(arrowSvg(id, dir === 'LR' ? xL : xR, dir === 'LR' ? xR : xL, oneLine === 'top' ? topY : botY, oneLine === 'top', S.arrow >= 2 ? lab : '?', S.arrow >= 2, fsV, 'a1', S.noDir));
+      if (S.arrow >= 3) o.push(arrowSvg(id, dir === 'LR' ? xL : xR, dir === 'LR' ? xR : xL, other === 'top' ? topY : botY, other === 'top', lab, true, fsV, 'a2 grow'));
+    }
+    o.push('</svg>');
+    return o.join('');
+  }
+  function fitFs(s, w, fs) { while (fs > 10 && tw(s, fs) > w) fs--; return fs; }
+
+  function valMark(txt, k, x, cy, fs, color, S, sid) {
+    var cls = 'val' + (S.mode !== 'show' ? ' tap' : '') + (S.wrong && S.wrong[sid] ? ' wrong' : '');
+    var s = '<g class="' + cls + '" data-filled="' + sid + '">';
+    if (k === 'one') {
+      s += '<circle cx="' + x + '" cy="' + cy + '" r="21" fill="var(--one)" stroke="var(--one-line)" stroke-width="2"/>' +
+        '<text x="' + x + '" y="' + (cy + fs * 0.36) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="#2a2310">1</text>';
+    } else if (txt === '□') {
+      s += '<rect x="' + (x - 21) + '" y="' + (cy - 21) + '" width="42" height="42" rx="4" fill="var(--card)" stroke="' + color + '" stroke-width="3.5"/>';
+    } else {
+      var w = Math.max(48, tw(txt, fs) + 22);
+      s += '<rect x="' + (x - w / 2) + '" y="' + (cy - 21) + '" width="' + w + '" height="42" rx="21" fill="var(--card)" stroke="' + color + '" stroke-width="2.5"/>' +
+        '<text x="' + x + '" y="' + (cy + fs * 0.36) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="var(--ink)">' + esc(txt) + '</text>';
+    }
+    return s + '</g>';
+  }
+
+  function arrowSvg(id, x1, x2, y, above, label, done, fs, cls, noHead) {
+    var sgn = above ? -1 : 1;
+    var y1 = y + sgn * 62, peak = y + sgn * 104;
+    var mx = (x1 + x2) / 2;
+    var d = 'M' + x1 + ' ' + y1 + ' Q' + mx + ' ' + peak + ' ' + x2 + ' ' + y1;
+    var col = done ? 'var(--arrow)' : 'var(--sub)';
+    var w = Math.max(64, tw(label, fs) + 26);
+    var ly = y + sgn * 84;
+    return '<g class="arw ' + cls + '"><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="3.5"' + (done ? '' : ' stroke-dasharray="8 6"') + (noHead ? '' : ' marker-end="url(#' + id + (done ? 'h' : 'q') + ')"') + '/>' +
+      '<rect x="' + (mx - w / 2) + '" y="' + (ly - 19) + '" width="' + w + '" height="38" rx="19" fill="' + (done ? 'var(--arrow)' : 'var(--card)') + '" stroke="' + col + '" stroke-width="2.5"/>' +
+      '<text x="' + mx + '" y="' + (ly + 7) + '" text-anchor="middle" font-size="' + (fs - 1) + '" font-weight="700" fill="' + (done ? '#fff' : 'var(--sub)') + '">' + esc(label) + '</text></g>';
+  }
+
+  /* 見るだけの図（式・答えの段、まとめ、ノートの見本） */
+  function show(P, opt) {
+    opt = opt || {};
+    return { P: P, mode: 'show', flip: false, lab: null, arrow: opt.arrow == null ? 3 : opt.arrow, prop: opt.prop !== false };
+  }
+
+  /* 箱の中に描く（幅に合わせて描き直す） */
+  function mount(box, S) {
+    var W = Math.max(300, Math.min(820, box.clientWidth || 600));
+    box.innerHTML = draw(S, W);
+    box._S = S;
+  }
+
+  return { draw: draw, mount: mount, show: show, expected: expected, cardText: cardText, arrowLabel: arrowLabel, arrowDir: arrowDir };
+})();
+
+/* ===== くらべ方ラボ 本体 ===== */
+(function () {
+  var F = GEN.fmtC, fix = GEN.fix;
+  function $(s, r) { return (r || document).querySelector(s); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function later(fn, ms) { return setTimeout(fn, ms); }
+
+  /* ---------- 記録（このたんまつだけ） ---------- */
+  var REC = (function () {
+    var KEY = 'kurabe-lab-v1', d;
+    function today() { var t = new Date(); return t.getFullYear() + '-' + (t.getMonth() + 1) + '-' + t.getDate(); }
+    function load() {
+      try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
+      if (!d) d = { day: today(), today: 0, total: 0, k: {}, streak: {}, test: { best: null, last: null }, ui: {} };
+      if (d.day !== today()) { d.day = today(); d.today = 0; }
+      return d;
+    }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { } }
+    load();
+    return {
+      d: d,
+      add: function (cat, ok) {
+        d.today++; d.total++;
+        var k = d.k[cat] || (d.k[cat] = { ok: 0, ng: 0 }); ok ? k.ok++ : k.ng++;
+        save(); $('#stToday').textContent = d.today;
+      },
+      streak: function (key, ok) { var s = d.streak[key] || 0; s = ok ? s + 1 : 0; d.streak[key] = s; save(); return s; },
+      ui: function (k, v) { if (v === undefined) return d.ui[k]; d.ui[k] = v; save(); },
+      test: function (score) { d.test.last = score; if (d.test.best == null || score > d.test.best) d.test.best = score; save(); },
+      save: save
+    };
+  })();
+
+  /* ---------- ソロエ博士 ---------- */
+  function hakase(size) {
+    size = size || 56;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<circle cx="32" cy="32" r="31" fill="#dff5f2"/>' +
+      '<path d="M12 64c1-12 9-18 20-18s19 6 20 18z" fill="#fff" stroke="#b8c6d3" stroke-width="1.5"/>' +
+      '<path d="M28 46l4 8 4-8" fill="#13a39a"/>' +
+      '<circle cx="32" cy="30" r="15" fill="#ffe1c4"/>' +
+      '<path d="M15 26c-2-8 4-14 8-12 1-5 8-6 10-2 4-3 11 0 10 6 5 1 7 7 4 11-2-6-5-8-7-8-6 2-14 2-20-1-2 2-4 4-5 6z" fill="#eef1f4" stroke="#c4ccd6"/>' +
+      '<circle cx="26" cy="31" r="5" fill="#fff" stroke="#173a5e" stroke-width="2"/><circle cx="38" cy="31" r="5" fill="#fff" stroke="#173a5e" stroke-width="2"/>' +
+      '<path d="M31 31h2" stroke="#173a5e" stroke-width="2"/><circle cx="26" cy="31" r="1.8" fill="#173a5e"/><circle cx="38" cy="31" r="1.8" fill="#173a5e"/>' +
+      '<path d="M27 39q5 4 10 0" fill="none" stroke="#a0573a" stroke-width="2" stroke-linecap="round"/></svg>';
+  }
+  function say(html) { return '<div class="hk">' + hakase() + '<div class="bub">' + html + '</div></div>'; }
+
+  // その箱を新しい問題が使い始めたら、前の問題のタイマーや押した処理を止める
+  function claim(host) { host._gen = (host._gen || 0) + 1; var g = host._gen; host.onclick = null; return function () { return host._gen === g && document.body.contains(host); }; }
+  // 「1ぴき」の読み
+  function ichi(u) { return ({ 'ひき': '1ぴき' })[u] || '1' + u; }
+
+  function toast(msg) { var t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = later(function () { t.classList.remove('on'); }, 1800); }
+
+  /* ---------- 数のキーパッド（★15） ---------- */
+  var KP = { active: null };
+  function keypad(box, opt) {
+    var st = { v: '', opt: opt, lock: false };
+    box.innerHTML = '<div class="ansrow">' + (opt.lead || '') + '<span class="kpval empty">？</span><span>' + esc(opt.unit || '') + '</span></div>' +
+      '<div class="kp">' +
+      ['7', '8', '9', 'bs', '4', '5', '6', 'ent', '1', '2', '3', '0', '.', 'clr'].map(function (k) {
+        if (k === 'bs') return '<button data-k="bs" class="fn" aria-label="1文字けす">⌫</button>';
+        if (k === 'ent') return '<button data-k="ent" class="ent">けってい</button>';
+        if (k === 'clr') return '<button data-k="clr" class="fn">ぜんぶけす</button>';
+        return '<button data-k="' + k + '">' + k + '</button>';
+      }).join('') + '</div>';
+    var disp = $('.kpval', box);
+    function show() { disp.textContent = st.v === '' ? '？' : st.v; disp.classList.toggle('empty', st.v === ''); disp.classList.remove('ng'); }
+    function key(k) {
+      if (st.lock) return;
+      if (k === 'bs') st.v = st.v.slice(0, -1);
+      else if (k === 'clr') st.v = '';
+      else if (k === 'ent') { if (st.v === '' || st.v === '.') { disp.classList.add('ng'); later(function () { disp.classList.remove('ng'); }, 500); return; } opt.onEnter(st.v); return; }
+      else if (k === '.') { if (st.v.indexOf('.') < 0 && st.v.length < 8) st.v = (st.v === '' ? '0' : st.v) + '.'; }
+      else { if (st.v.replace('.', '').length >= 8) return; st.v = st.v === '0' ? k : st.v + k; }
+      show();
+    }
+    box.addEventListener('click', function (e) { var b = e.target.closest('[data-k]'); if (b) key(b.getAttribute('data-k')); });
+    st.key = key;
+    st.ng = function () { disp.classList.remove('ng'); void disp.offsetWidth; disp.classList.add('ng'); };
+    st.clear = function () { st.v = ''; show(); };
+    st.set = function (v) { st.v = v; show(); };
+    KP.active = st;
+    return st;
+  }
+  document.addEventListener('keydown', function (e) {
+    var k = KP.active, kpOn = k && !k.lock && document.body.contains($('.kpval'));
+    if (e.key === 'Enter' && !kpOn) {
+      var nb = [].slice.call(document.querySelectorAll('main .next')).filter(function (b) { return b.offsetParent; }).pop();
+      if (nb && document.activeElement.tagName !== 'BUTTON') { nb.click(); e.preventDefault(); }
+      return;
+    }
+    if (!kpOn) return;
+    if (/^[0-9]$/.test(e.key)) k.key(e.key);
+    else if (e.key === '.') k.key('.');
+    else if (e.key === 'Backspace') { k.key('bs'); e.preventDefault(); }
+    else if (e.key === 'Enter') { k.key('ent'); e.preventDefault(); }
+    else if (e.key === 'Escape') k.key('clr');
+  });
+
+  /* ---------- 数直線の描き直し（はばが変わったとき） ---------- */
+  function mountNL(box, S) { NL.mount(box, S); }
+  var rz;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz); rz = later(function () {
+      document.querySelectorAll('.nlbox').forEach(function (b) { if (b._S) { b._S.anim = false; NL.mount(b, b._S); } });
+    }, 150);
+  });
+
+  /* ---------- 問題のことば ---------- */
+  var ADJ = { '面積': ['広い', 'せまい'], '畑の面積': ['広い', 'せまい'], '代金': ['高い', '安い'], '時間': ['長い', '短い'], '道のり': ['長い', '短い'],
+    '走った道のり': ['長い', '短い'], '長さ': ['長い', '短い'], '重さ': ['重い', '軽い'], 'ジュースの量': ['多い', '少ない'] };
+  function adj(name, big) { var a = ADJ[name] || ['多い', '少ない']; return big ? a[0] : a[1]; }
+  function unkKey(P) { return P.kind === 'per' ? 'u' : P.kind === 'total' ? 'a' : 'b'; }
+  function exprText(P, l, op, r) { return F(l) + ' ' + op + ' ' + F(r); }
+  function ansText(P, v) { return (P.ansPre || '') + F(v) + P.ansUnit; }
+
+  // 式をまちがえたときの返事（図にもどって考える）
+  function exprMiss(P, lk, op, rk) {
+    var c = P.ctx, b = F(P.b);
+    if (P.kind === 'per') {
+      if (op === '÷' && lk === 'b') return 'それだと「' + ichi(c.top.u) + 'あたりの' + c.bot.n + '」になってしまうよ。図を見よう。下の線は ' + b + ' → 1 で <b>÷' + b + '</b>。上の線の <b>' + F(P.a) + '</b> も同じように <b>÷' + b + '</b>。';
+      return '1は' + b + 'より小さいね。小さくする矢印は <b>÷</b>。図の矢印が ÷' + b + ' だから、上の線も <b>' + F(P.a) + ' ÷ ' + b + '</b>。';
+    }
+    if (P.kind === 'total') return '1 → ' + b + ' は <b>×' + b + '</b>（' + b + 'こ分）。上の線も同じように、1あたりの <b>' + F(P.u) + '</b> を ×' + b + '。';
+    return '図では、1 → □ が <b>×□</b>。だから <b>' + F(P.u) + ' × □ ＝ ' + F(P.a) + '</b>。□を求めるには、' + F(P.a) + ' を ' + F(P.u) + ' でわる。';
+  }
+
+  /* =====================================================
+     1つの問題を解く（よむ → 図 → 式 → 答え）
+     cfg.steps: read / label / place / arrow / expr / ans
+     ===================================================== */
+  function Runner(host, P, cfg) {
+    var R = this; window.__R = R;
+    R.alive = claim(host); R.tok = 0;
+    R.P = P; R.cfg = cfg; R.miss = 0; R.firstTry = true;
+    var steps = cfg.steps;
+    var S = R.S = { P: P, flip: false, lab: { top: null, bot: null }, slot: { tL: null, tR: null, bL: null, bR: null }, arrow: 0, prop: false, wrong: {}, hint: {}, sel: null };
+    if (steps.indexOf('label') < 0) { S.flip = !!cfg.flip; S.lab = S.flip ? { top: 'B', bot: 'T' } : { top: 'T', bot: 'B' }; }
+    if (steps.indexOf('place') < 0) { S.slot = NL.expected(S); S.prop = true; }
+    if (steps.indexOf('arrow') < 0) S.arrow = 3;
+    if (cfg.showOnly) { S.mode = 'show'; }
+    R.read = {};
+    R.si = 0;
+
+    host.innerHTML = '';
+    if (cfg.banner) host.appendChild(el('div', 'ask', cfg.banner));
+    R.eText = el('div', 'prob'); if (!cfg.hideText) host.appendChild(R.eText);
+    R.eSteps = el('div', 'steps'); host.appendChild(R.eSteps);
+    R.eNLwrap = el('div'); host.appendChild(R.eNLwrap);
+    R.eNL = el('div', 'nlbox'); R.eNLwrap.appendChild(R.eNL);
+    R.eNote = el('div', 'nlnote'); R.eNLwrap.appendChild(R.eNote);
+    if (cfg.noDiagram) { R.eNLwrap.style.display = 'none'; }
+    R.eCtrl = el('div', 'ctrl'); host.appendChild(R.eCtrl);
+    R.eFb = el('div', 'fb'); host.appendChild(R.eFb);
+    R.eEnd = el('div'); host.appendChild(R.eEnd);
+
+    R.eNL.addEventListener('click', function (e) { R.onNL(e); });
+    R.eText.addEventListener('click', function (e) { var t = e.target.closest('.tok.tap'); if (t) R.onTok(t); });
+    R.renderText(); R.renderSteps(); R.drawNL();
+    R.go(0);
+  }
+  Runner.prototype.later = function (fn, ms) {
+    var R = this, tok = R.tok;
+    return setTimeout(function () { if (R.tok === tok && R.alive()) fn(); }, ms);
+  };
+  Runner.prototype.cur = function () { return this.cfg.steps[this.si]; };
+  Runner.prototype.fb = function (html, type) {
+    this.eFb.className = 'fb' + (html ? ' show ' + (type || 'info') : '');
+    this.eFb.innerHTML = html || '';
+  };
+  Runner.prototype.drawNL = function () { mountNL(this.eNL, this.S); };
+  Runner.prototype.renderText = function () {
+    var R = this, P = R.P, S = R.S, o = '';
+    if (R.cfg.hideText || !P.segs) return;
+    if (R.cfg.qno) o += '<span class="qno">' + R.cfg.qno + '</span>';
+    o += '<span class="ic">' + P.ctx.icon + '</span>';
+    var segs = P.segs, lastTok = -1;
+    segs.forEach(function (s, i) { if (s.n != null) lastTok = i; });
+    var reading = R.cur() === 'read';
+    segs.forEach(function (s, i) {
+      if (s.n != null) {
+        var cls = 'tok';
+        if (reading) cls += R.read[s.k] ? ' got' : ' tap';
+        else {
+          // 図に置いた線の色にそめる
+          var line = null;
+          ['tL', 'tR', 'bL', 'bR'].forEach(function (sid) { if (S.slot[sid] === s.k) line = sid[0] === 't' ? 'top' : 'bot'; });
+          if (S.mode === 'show') line = (s.k === 'b') ? 'bot' : 'top';
+          if (line) cls += ' ' + line;
+        }
+        o += '<span class="' + cls + '" data-k="' + s.k + '">' + F(s.n) + '</span>';
+      } else {
+        o += i > lastTok ? '<span class="askline">' + esc(s.t) + '</span>' : esc(s.t);
+      }
+    });
+    R.eText.innerHTML = o;
+  };
+  Runner.prototype.renderSteps = function () {
+    var R = this, steps = R.cfg.steps, cur = R.cur();
+    var groups = [];
+    var name = { read: 'よむ', label: '図をかく', place: '図をかく', arrow: '図をかく', expr: '式', ans: '答え' };
+    steps.forEach(function (s) { if (groups.indexOf(name[s]) < 0) groups.push(name[s]); });
+    var curG = cur ? name[cur] : null, past = true;
+    R.eSteps.innerHTML = groups.map(function (g, i) {
+      var cls = 'st';
+      if (!cur) cls += ' done';
+      else if (g === curG) { cls += ' now'; past = false; }
+      else if (past) cls += ' done';
+      return '<span class="' + cls + '">' + (i + 1) + ' ' + g + '</span>';
+    }).join('');
+  };
+  Runner.prototype.go = function (i) {
+    var R = this; R.si = i; R.miss = 0; R.tok++;
+    R.renderSteps(); R.renderText();
+    var s = R.cur();
+    if (!s) return R.finish();
+    R.fb('');
+    R['st_' + s]();
+  };
+  Runner.prototype.next = function () { this.go(this.si + 1); };
+  Runner.prototype.slip = function () { this.firstTry = false; this.miss++; };
+
+  /* ---- よむ：大事な数をタップ ---- */
+  Runner.prototype.st_read = function () {
+    var R = this;
+    R.eCtrl.innerHTML = '<div class="ask">文の中の、大事な数を2つタップしよう<span class="sm">線が引いてある所が「聞かれていること」</span></div>';
+    R.eNLwrap.style.opacity = '.35';
+  };
+  Runner.prototype.onTok = function (t) {
+    var R = this; if (R.cur() !== 'read') return;
+    R.read[t.getAttribute('data-k')] = true;
+    R.renderText();
+    if (Object.keys(R.read).length >= R.P.given.length) {
+      R.eNLwrap.style.opacity = '';
+      R.fb('2つの数が見つかったね。この2つと「1」と「□」で図をかくよ。', 'ok');
+      R.later(function () { R.next(); }, 900);
+    }
+  };
+
+  /* ---- 図：線の名前 ---- */
+  Runner.prototype.st_label = function () {
+    var R = this, c = R.P.ctx;
+    var items = GEN.shuffle([{ k: 'T', q: c.top }, { k: 'B', q: c.bot }]);
+    R.S.phase = 'label';
+    R.eCtrl.innerHTML = '<div class="ask">① 2本の線に名前をつけよう<span class="sm">どんな2つの量が出てくるかな？　名前をタップすると線に入るよ</span></div>' +
+      '<div class="tray">' + items.map(function (it) {
+        return '<button class="cardb labc" data-labk="' + it.k + '">' + esc(it.q.n) + ' <span class="u">（' + esc(it.q.u) + '）</span></button>';
+      }).join('') + '</div>';
+    R.eCtrl.onclick = function (e) {
+      var b = e.target.closest('[data-labk]'); if (!b || b.classList.contains('used')) return;
+      var k = b.getAttribute('data-labk');
+      var where = R.S.labTarget || (!R.S.lab.top ? 'top' : 'bot');
+      if (R.S.lab[where]) where = where === 'top' ? 'bot' : 'top';
+      R.S.lab[where] = k; R.S.labTarget = null; R.S.labHint = null;
+      b.classList.add('used');
+      R.drawNL(); R.afterLabel();
+    };
+    R.drawNL();
+  };
+  Runner.prototype.afterLabel = function () {
+    var R = this, S = R.S;
+    if (S.lab.top && S.lab.bot) {
+      S.flip = S.lab.top === 'B';
+      S.phase = '';
+      var c = R.P.ctx, under = S.flip ? c.top : c.bot;
+      R.fb('「' + esc(c.top.n) + '」と「' + esc(c.bot.n) + '」の2本。' + (S.flip ? 'ぎゃくに置いてもだいじょうぶ。' : '') + '1は「' + esc(ichi(c.bot.u)) + 'あたり」の1だから、<b>' + esc(c.bot.n) + '</b>の線に入るよ。', 'ok');
+      R.later(function () { R.next(); }, 1000);
+    }
+  };
+
+  /* ---- 図：数を目もりに置く ---- */
+  Runner.prototype.cards = function () {
+    var P = this.P; return P.given.concat(['one', unkKey(P)]);
+  };
+  Runner.prototype.st_place = function () {
+    var R = this, P = R.P, S = R.S;
+    S.phase = 'place'; S.sel = null; S.wrong = {}; S.hint = {};
+    R.eCtrl.innerHTML = '<div class="ask">② 数を目もりに置こう<span class="sm">カードをタップ → 置きたい所をタップ（もう一度タップでもどせる）</span></div><div class="tray"></div>';
+    R.drawTray(); R.drawNL();
+    R.eCtrl.onclick = function (e) {
+      var b = e.target.closest('[data-card]'); if (!b || b.classList.contains('used') || S.phase !== 'place') return;
+      var k = b.getAttribute('data-card');
+      if (S.selSlot) { var to = S.selSlot; S.selSlot = null; R.put(to, k); return; }
+      S.sel = S.sel === k ? null : k;
+      R.drawTray(); R.drawNL();
+      R.fb(S.sel ? '<b>' + esc(NL.cardText(R.P, k)) + '</b> をえらんだよ。図の中の、光っている わくをタップして置こう。' : '', 'info');
+    };
+  };
+  Runner.prototype.drawTray = function () {
+    var R = this, S = R.S, tray = $('.tray', R.eCtrl); if (!tray) return;
+    var used = {}; ['tL', 'tR', 'bL', 'bR'].forEach(function (s) { if (S.slot[s]) used[S.slot[s]] = 1; });
+    tray.classList.toggle('waiting', !!S.selSlot);
+    tray.innerHTML = R.cards().map(function (k) {
+      var t = NL.cardText(R.P, k);
+      var cls = 'cardb' + (k === 'one' ? ' one' : '') + (t === '□' ? ' q' : '') + (used[k] ? ' used' : '') + (S.sel === k ? ' sel' : '');
+      return '<button class="' + cls + '" data-card="' + k + '">' + esc(t) + '</button>';
+    }).join('');
+  };
+  Runner.prototype.onNL = function (e) {
+    var R = this, S = R.S;
+    if (S.phase === 'label') {
+      var lb = e.target.closest('[data-lab]'); if (!lb) return;
+      var wh = lb.getAttribute('data-lab');
+      if (S.lab[wh]) { // 名前をはずす
+        var k = S.lab[wh]; S.lab[wh] = null;
+        var btn = R.eCtrl.querySelector('[data-labk="' + k + '"]'); if (btn) btn.classList.remove('used');
+      } else { S.labTarget = wh; S.labHint = wh; }
+      R.drawNL(); return;
+    }
+    if (S.phase !== 'place') return;
+    var f = e.target.closest('[data-filled]');
+    if (f) { var sid = f.getAttribute('data-filled'); S.slot[sid] = null; delete S.wrong[sid]; R.drawTray(); R.drawNL(); R.renderText(); return; }
+    var sl = e.target.closest('[data-slot]');
+    if (sl) {
+      var id = sl.getAttribute('data-slot');
+      if (S.sel) R.put(id, S.sel);
+      else {
+        S.selSlot = S.selSlot === id ? null : id; // もう一度タップで選ぶのをやめる
+        R.drawNL(); R.drawTray();
+        R.fb(S.selSlot ? '光っている「ここ」のわくに入れるカードを、下からタップしてね。' : '', 'info');
+      }
+    }
+  };
+  Runner.prototype.put = function (sid, k) {
+    var R = this, S = R.S;
+    ['tL', 'tR', 'bL', 'bR'].forEach(function (s) { if (S.slot[s] === k) S.slot[s] = null; });
+    S.slot[sid] = k; S.sel = null; S.hint = {};
+    R.drawTray(); R.drawNL(); R.renderText(); R.fb('');
+    var full = ['tL', 'tR', 'bL', 'bR'].every(function (s) { return S.slot[s]; });
+    clearTimeout(R.chkT);
+    if (full) R.chkT = R.later(function () { R.checkPlace(); }, 280);
+  };
+  Runner.prototype.checkPlace = function () {
+    var R = this, S = R.S, P = R.P, c = P.ctx, exp = NL.expected(S);
+    if (S.phase !== 'place' || !['tL', 'tR', 'bL', 'bR'].every(function (s) { return S.slot[s]; })) return;
+    var wrong = ['tL', 'tR', 'bL', 'bR'].filter(function (s) { return S.slot[s] !== exp[s]; });
+    if (!wrong.length) return R.placeOK();
+    R.slip();
+    S.wrong = {}; wrong.forEach(function (s) { S.wrong[s] = true; });
+    R.drawNL();
+    // どんなまちがいか
+    var w = wrong[0], k = S.slot[w];
+    var isTline = (w[0] === 't') !== !!S.flip; // その線は「比べる量」か
+    var kIsT = k === 'u' || k === 'a';
+    var msg;
+    if (kIsT !== isTline && k !== 'one') {
+      var q = kIsT ? c.top : c.bot;
+      msg = '<b>' + esc(NL.cardText(P, k)) + '</b> は「' + esc(q.n) + '（' + esc(q.u) + '）」を表す数。<b>' + esc(q.n) + '</b>の線に置こう。';
+    } else if (k === 'one') {
+      msg = '<b>1</b>は「' + esc(ichi(c.bot.u)) + 'あたり」の1。<b>' + esc(c.bot.n) + '</b>の線で、' + (P.kind === 'count' ? '□' : F(P.b)) + 'より小さいから <b>左の目もり</b>。';
+    } else {
+      msg = '同じたての列には、組になる数が入るよ。<b>1</b>の真上（真下）には「' + esc(ichi(c.bot.u)) + 'あたりの' + esc(c.top.n) + '」、<b>' + (P.kind === 'count' ? '□' : F(P.b)) + '</b>と同じ列には「' + (P.kind === 'count' ? F(P.a) : (P.kind === 'per' ? F(P.a) : '□')) + '」。';
+    }
+    if (R.miss >= 3) {
+      msg = 'こう置くよ。黄色の1と、その上下の数をよく見てね。';
+      S.slot = exp; S.wrong = {};
+      R.fb(msg, 'ng'); R.drawTray(); R.drawNL(); R.renderText();
+      return R.later(function () { R.placeOK(true); }, 1600);
+    }
+    R.fb(msg + '<br><span class="sub2">赤い所をタップするともどせるよ。</span>', 'ng');
+    if (R.miss >= 2) {
+      // もどして、正しい場所を光らせる
+      R.later(function () {
+        if (S.phase !== 'place' || !Object.keys(S.wrong).length) return;
+        wrong.forEach(function (s) { S.slot[s] = null; });
+        S.wrong = {}; S.hint = {}; S.hint[wrong[0]] = true; S.sel = exp[wrong[0]];
+        R.drawTray(); R.drawNL(); R.renderText();
+        R.fb('光っている所に、えらんであるカードを置いてみよう。', 'info');
+      }, 1300);
+    }
+  };
+  Runner.prototype.placeOK = function (auto) {
+    var R = this, S = R.S, P = R.P;
+    S.phase = ''; S.wrong = {}; S.hint = {};
+    S.prop = true; S.anim = true; R.drawNL();
+    var canProp = S._propUsed;
+    if (canProp) {
+      var go = function () { R.eNL.querySelectorAll('.colg').forEach(function (g) { g.style.transform = 'translateX(0px)'; }); };
+      requestAnimationFrame(function () { requestAnimationFrame(go); }); R.later(go, 60);
+      R.later(function () { S.anim = false; }, 1000);
+      R.eNote.textContent = '目もりを、長さどおりの場所に動かしたよ。' + F(P.b) + 'は1の' + F(P.b) + 'こ分。';
+    } else { S.anim = false; R.drawNL(); R.eNote.textContent = ''; }
+    $('.tray', R.eCtrl) && ($('.tray', R.eCtrl).innerHTML = '');
+    if (!auto) R.fb('ぴったり！ <b>1</b>と「1あたり」、<b>' + (P.kind === 'count' ? '□' : F(P.b)) + '</b>と「' + (P.kind === 'total' ? '□' : F(P.a)) + '」が、同じたての列にそろったね。', 'ok');
+    R.later(function () { R.next(); }, canProp ? 1300 : 900);
+  };
+
+  /* ---- 図：矢印 ---- */
+  Runner.prototype.st_arrow = function () {
+    var R = this, S = R.S, P = R.P, c = P.ctx;
+    var lab = NL.arrowLabel(P), dir = NL.arrowDir(P);
+    var left = '1', right = P.kind === 'count' ? '□' : F(P.b);
+    var line = S.flip ? '上' : '下';
+    var ph = 'dir';
+    S.arrow = 1; S.noDir = true; R.drawNL();
+    // ア 向きをえらぶ
+    function drawDir() {
+      var opts = GEN.shuffle([['LR', left, right, '左から右へ'], ['RL', right, left, '右から左へ']]);
+      R.eCtrl.innerHTML = '<div class="ask">③ 矢印の向きをえらぼう<span class="sm">1のある線（' + line + 'の線・' + esc(c.bot.n) + '）に矢印をかくよ。どちらからどちらへ進む？</span></div>' +
+        '<div class="opts row">' + opts.map(function (o) {
+          return '<button class="opt dir" data-d="' + o[0] + '"><span class="dv">' + esc(o[1]) + ' <span class="ar">→</span> ' + esc(o[2]) + '</span><span class="dl">' + o[3] + '</span></button>';
+        }).join('') + '</div>';
+    }
+    // イ なぜその向き？
+    function drawWhy() {
+      var good = GEN.pick(['わかっている2つの数の列から、求めたい□の列へ向けるから', '□の列が行き先。わかっている数の列から進めるから', '求めたい□がある列に向かって、矢印を進めるから']);
+      var bad = P.kind === 'per' ? ['1がある列から出発するから', '小さい数から大きい数へ向けるから', 'いつも左から右へ書くきまりだから']
+        : ['大きい数から小さい数へ向けるから', '1がある列へ向けるから', '小さい数から大きい数へ向けるから', 'いつも右から左へ書くきまりだから'];
+      var rs = GEN.shuffle([[good, 1]].concat(GEN.shuffle(bad).slice(0, 2).map(function (t) { return [t, 0]; })));
+      R.eCtrl.innerHTML = '<div class="ask">どうしてその向きになるの？</div><div class="opts">' +
+        rs.map(function (r) { return '<button class="opt wide" data-w="' + r[1] + '">' + r[0] + '</button>'; }).join('') + '</div>';
+    }
+    // ウ ×か÷か
+    function drawOp() {
+      var from = dir === 'LR' ? left : right, to = dir === 'LR' ? right : left;
+      var opts = GEN.shuffle(P.kind === 'count' ? ['×□', '÷□', '×' + F(P.u)] : ['×' + F(P.b), '÷' + F(P.b)]);
+      R.eCtrl.innerHTML = '<div class="ask">矢印に書く数は？<span class="sm"><b>' + esc(from) + ' → ' + esc(to) + '</b> にするには？</span></div>' +
+        '<div class="opts row">' + opts.map(function (o) { return '<button class="opt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>';
+    }
+    drawDir();
+    R.eCtrl.onclick = function (e) {
+      var d = e.target.closest('[data-d]'), w = e.target.closest('[data-w]'), b = e.target.closest('[data-o]');
+      if (d && ph === 'dir') {
+        if (d.getAttribute('data-d') === dir) {
+          d.classList.add('ok'); ph = 'wait'; S.noDir = false; R.drawNL();
+          R.fb('その向き！', 'ok');
+          R.later(function () { ph = 'why'; R.fb(''); drawWhy(); }, 900);
+        } else {
+          R.slip(); d.classList.add('ng');
+          R.fb('<b>□</b>はどの列にある？ 図をよく見て、もう一度えらぼう。', 'ng');
+        }
+        return;
+      }
+      if (w && ph === 'why') {
+        if (w.getAttribute('data-w') === '1') {
+          w.classList.add('ok'); ph = 'wait';
+          R.fb('そのとおり。' + (P.kind === 'per' ? '大きい数（' + right + '）から小さい数（1）へ向かうこともあるよ。' : '') + 'わかっている所から、わからない所へ進むんだ。', 'ok');
+          R.later(function () { ph = 'op'; R.fb(''); drawOp(); }, 1100);
+        } else {
+          R.slip(); w.classList.add('ng');
+          var wt = w.textContent;
+          R.fb(wt.indexOf('数から') > 0 ? '大きさの順ではないよ。' + (P.kind === 'per' ? 'この問題は ' + right + ' → 1 で、大きい方から小さい方へ向かっているね。' : 'ほかの問題では反対向きのこともある。') + '□がどこにあるかで決まる。'
+            : wt.indexOf('1がある列') === 0 ? '1の列が出発のときも、行き先のときもあるよ。□がどこにあるかで決まる。'
+            : '向きは問題ごとに変わるよ。□がどこにあるかで決まる。', 'ng');
+        }
+        return;
+      }
+      if (b && ph === 'op' && S.arrow === 1) {
+        var o = b.getAttribute('data-o');
+        if (o === lab) {
+          b.classList.add('ok'); S.arrow = 2; R.drawNL();
+          R.later(function () {
+            S.arrow = 3; R.drawNL();
+            R.fb('<b>もう1本の線の数も、同じ向きに同じように ' + esc(lab) + '</b>。2本の線は、いつも同じだけ×や÷をするよ。これで図のできあがり！', 'ok');
+            R.later(function () { R.next(); }, 1500);
+          }, 600);
+        } else {
+          R.slip(); b.classList.add('ng');
+          var m = P.kind === 'per' ? F(P.b) + ' → 1 は小さくなる方向。小さくするのは <b>÷' + F(P.b) + '</b>。'
+            : P.kind === 'total' ? '1 → ' + F(P.b) + ' は ' + F(P.b) + 'こ分にする方向。<b>×' + F(P.b) + '</b>。'
+            : o.indexOf('□') < 0 ? F(P.u) + ' は上の線の数。下の線で、1 を何倍すると □ になるかを書くよ。わからない数は □ のまま <b>×□</b>。'
+            : '1 → □ は、1 のいくつ分かにする方向。わからない数を□として <b>×□</b> と書くよ。';
+          R.fb(m, 'ng');
+        }
+      }
+    };
+  };
+
+  /* ---- 式 ---- */
+  Runner.prototype.st_expr = function () {
+    var R = this; if (R.cfg.exprMode === 'build') R.exprBuild(); else R.exprPick();
+  };
+  Runner.prototype.exprOptions = function () {
+    var P = this.P, k = P.kind;
+    var list = k === 'per' ? [['a', '÷', 'b'], ['b', '÷', 'a'], ['a', '×', 'b']]
+      : k === 'total' ? [['u', '×', 'b'], ['u', '÷', 'b'], ['b', '÷', 'u']]
+        : [['a', '÷', 'u'], ['u', '÷', 'a'], ['a', '×', 'u']];
+    return list;
+  };
+  Runner.prototype.isRightExpr = function (lk, op, rk) {
+    var e = this.P.expr;
+    if (op !== e.op) return false;
+    if (lk === e.lk && rk === e.rk) return true;
+    return op === '×' && lk === e.rk && rk === e.lk;
+  };
+  Runner.prototype.exprHead = function () {
+    var P = this.P;
+    if (P.kind === 'count') return '<div class="bigexpr"><span class="sub2">図から：</span>' + F(P.u) + ' × <span class="q">□</span> ＝ ' + F(P.a) + '</div>';
+    return '';
+  };
+  Runner.prototype.exprPick = function () {
+    var R = this, P = R.P;
+    var opts = GEN.shuffle(R.exprOptions());
+    R.eCtrl.innerHTML = '<div class="ask">□を求める式はどれ？<span class="sm">図の矢印を見て考えよう</span></div>' + R.exprHead() +
+      '<div class="opts">' + opts.map(function (o) { return '<button class="opt" data-e="' + o.join(',') + '">□ ＝ ' + exprText(P, P[o[0]], o[1], P[o[2]]) + '</button>'; }).join('') + '</div>';
+    R.eCtrl.onclick = function (e) {
+      var b = e.target.closest('[data-e]'); if (!b || R.cur() !== 'expr' || R.exprDone) return;
+      var o = b.getAttribute('data-e').split(',');
+      if (R.isRightExpr(o[0], o[1], o[2])) { b.classList.add('ok'); R.exprDone = true; R.fb('そのとおり！', 'ok'); R.later(function () { R.exprDone = false; R.next(); }, 700); }
+      else { R.slip(); b.classList.add('ng'); R.fb(exprMiss(P, o[0], o[1], o[2]), 'ng'); R.flashArrow(); }
+    };
+  };
+  Runner.prototype.flashArrow = function () {
+    var a = this.eNL.querySelectorAll('.arw'); a.forEach(function (g) { g.classList.remove('grow'); void g.getBBox(); g.classList.add('grow'); });
+  };
+  Runner.prototype.exprBuild = function () {
+    var R = this, P = R.P;
+    R.ex = [null, null, null];
+    var nums = P.given.slice();
+    function draw() {
+      var used = {}; R.ex.forEach(function (x) { if (x) used[x] = 1; });
+      var box = function (i) {
+        var x = R.ex[i], t = '';
+        if (x) t = (x === '×' || x === '÷') ? x : F(P[x]);
+        return '<span class="box' + (i === 1 ? ' op' : '') + (x ? ' f' : '') + '" data-bx="' + i + '">' + t + '</span>';
+      };
+      R.eCtrl.innerHTML = '<div class="ask">□を求める式をつくろう<span class="sm">カードをタップすると左から入るよ。入れた所をタップでもどせる</span></div>' + R.exprHead() +
+        '<div class="expr"><span>□ ＝</span>' + box(0) + box(1) + box(2) + '</div>' +
+        '<div class="tray">' + nums.map(function (k) { return '<button class="cardb' + (used[k] ? ' used' : '') + '" data-n="' + k + '">' + F(P[k]) + '</button>'; }).join('') +
+        ['×', '÷'].map(function (o) { return '<button class="cardb q" data-op="' + o + '">' + o + '</button>'; }).join('') + '</div>';
+    }
+    draw();
+    R.eCtrl.onclick = function (e) {
+      if (R.cur() !== 'expr' || R.exprDone) return;
+      var bx = e.target.closest('[data-bx]');
+      if (bx) { R.ex[+bx.getAttribute('data-bx')] = null; draw(); return; }
+      var n = e.target.closest('[data-n]'), op = e.target.closest('[data-op]');
+      if (n && !n.classList.contains('used')) { var i = R.ex[0] ? (R.ex[2] ? -1 : 2) : 0; if (i < 0) return; R.ex[i] = n.getAttribute('data-n'); }
+      else if (op) R.ex[1] = op.getAttribute('data-op');
+      else return;
+      draw();
+      if (R.ex[0] && R.ex[1] && R.ex[2]) {
+        if (R.isRightExpr(R.ex[0], R.ex[1], R.ex[2])) { R.exprDone = true; R.fb('いい式！', 'ok'); R.later(function () { R.exprDone = false; R.next(); }, 700); }
+        else {
+          R.slip(); R.fb(exprMiss(P, R.ex[0], R.ex[1], R.ex[2]), 'ng'); R.flashArrow();
+          $('.expr', R.eCtrl).querySelectorAll('.box').forEach(function (b) { b.classList.add('ng'); });
+          if (R.miss >= 3) { var e2 = P.expr; R.exprDone = true; R.ex = [e2.lk, e2.op, e2.rk]; R.later(function () { draw(); R.fb('式はこうなるよ。図の矢印と見くらべてね。', 'info'); R.later(function () { R.exprDone = false; R.next(); }, 1800); }, 900); }
+        }
+      }
+    };
+  };
+
+  /* ---- 答え ---- */
+  Runner.prototype.st_ans = function () {
+    var R = this, P = R.P;
+    var e = P.expr;
+    var lead = '<span>□ ＝ ' + exprText(P, e.l, e.op, e.r) + ' ＝</span>' + (P.ansPre ? '<span>' + P.ansPre + '</span>' : '');
+    R.eCtrl.innerHTML = '<div class="ask">計算して答えを入れよう' + (P.round ? '<span class="sm">四しゃ五入して整数で</span>' : '<span class="sm">わり算は、ノートで筆算してもいいよ</span>') + '</div><div class="kpw"></div>';
+    var kp = keypad($('.kpw', R.eCtrl), {
+      lead: lead, unit: P.ansUnit,
+      onEnter: function (v) {
+        var x = parseFloat(v);
+        if (Math.abs(x - P.ans) < 1e-9) { kp.lock = true; R.ansOK = R.firstTry; R.fb('せいかい！ 答えは <b>' + ansText(P, P.ans) + '</b>', 'ok'); R.later(function () { R.next(); }, 700); return; }
+        R.slip(); kp.ng();
+        var inv = P.kind === 'per' ? P.b / P.a : P.kind === 'count' ? P.u / P.a : P.u / P.b;
+        var m;
+        if (P.kind === 'total' && (Math.abs(x - P.u / P.b) < 0.01 || Math.abs(x - P.b / P.u) < 0.01)) m = '全体は「1あたり × いくつ分」。<b>かけ算</b>だよ。式は <b>' + exprText(P, e.l, e.op, e.r) + '</b>。';
+        else if (P.kind !== 'total' && Math.abs(x - inv) < 0.01) m = 'わる数とわられる数が、反対になっていないかな？ 式は <b>' + exprText(P, e.l, e.op, e.r) + '</b>。';
+        else if (P.round && Math.abs(x - P.a / P.b) < 0.6) m = '四しゃ五入して<b>整数</b>にしよう。';
+        else m = '計算をもう一度たしかめよう。' + (e.op === '÷' ? '答えに、わる数をかけると、わられる数にもどるかな？' : '');
+        if (R.miss >= 2) {
+          kp.lock = true; kp.set(F(P.ans));
+          R.fb('答えは <b>' + ansText(P, P.ans) + '</b>。ノートで ' + exprText(P, e.l, e.op, e.r) + ' の計算を見直そう。', 'ng');
+          R.later(function () { R.next(); }, 2200); return;
+        }
+        R.fb(m, 'ng');
+      }
+    });
+  };
+
+  /* ---- おわり：ノートの見本 ---- */
+  Runner.prototype.finish = function () {
+    var R = this, P = R.P, cfg = R.cfg;
+    R.eCtrl.innerHTML = ''; R.eCtrl.onclick = null; KP.active = null;
+    var hasAns = cfg.steps.indexOf('ans') >= 0, hasExpr = cfg.steps.indexOf('expr') >= 0;
+    if ((hasAns || hasExpr) && !cfg.noNote) {
+      var e = P.expr;
+      var note = el('div', 'note');
+      var lines = '';
+      if (P.kind === 'count') lines += '<div class="ln">' + F(P.u) + ' × □ ＝ ' + F(P.a) + '</div>';
+      lines += '<div class="ln">□ ＝ ' + exprText(P, e.l, e.op, e.r) + (hasAns ? ' ＝ ' + F(P.ans) : '') + '</div>';
+      if (hasAns) lines += '<div class="ln">答え　' + ansText(P, P.ans) + '</div>';
+      note.innerHTML = '<h4>ノートにはこう書こう</h4><div class="nlbox"></div>' + lines;
+      R.eEnd.appendChild(note);
+      var S2 = { P: P, mode: 'show', final: true, flip: R.S.flip, lab: R.S.flip ? { top: 'B', bot: 'T' } : { top: 'T', bot: 'B' }, arrow: 3, prop: true, slot: {} };
+      mountNL($('.nlbox', note), S2);
+      if (!cfg.noDiagram) R.eNLwrap.style.display = 'none';
+    }
+    if (cfg.onDone) cfg.onDone(R.firstTry, R);
+  };
+
+  /* ---------- 「つぎへ」ボタン ---------- */
+  function nextBtn(host, label, fn) {
+    var b = el('button', 'next', label || 'つぎの問題へ ▶');
+    b.onclick = function () { b.disabled = true; fn(); };
+    host.appendChild(b);
+    return b;
+  }
+  function scrollTo(elm) {
+    var r = elm.getBoundingClientRect();
+    if (r.top < ($('.bar') ? $('.bar').offsetHeight : 90) || r.top > window.innerHeight * 0.5) window.scrollTo({ top: window.scrollY + r.top - ($('.bar') ? $('.bar').offsetHeight + 12 : 110), behavior: 'smooth' });
+  }
+
+  /* 比べる問題の表 */
+  function cmpTable(C) {
+    var c = C.ctx, col = c.cmp.col;
+    var o = '<div class="scr"><table class="ctab"><tr><th></th><th>' + esc(col[0]) + '</th><th>' + esc(col[1]) + '</th>' + (C.showPer ? '<th>' + esc(c.perName) + (c.perAns.u && c.perName.indexOf('（') < 0 ? '（' + esc(c.perAns.u) + '）' : '') + '</th>' : '') + '</tr>';
+    C.items.forEach(function (it) {
+      var v0 = c.cmp.swapCol ? it.a : it.b, v1 = c.cmp.swapCol ? it.b : it.a;
+      o += '<tr><td>' + esc(it.nm) + '</td><td class="c1">' + F(v0) + '</td><td class="c2">' + F(v1) + '</td>' + (C.showPer ? '<td class="c3">' + (it.done ? F(it.u) : '') + '</td>' : '') + '</tr>';
+    });
+    return o + '</table></div>';
+  }
+  function itemP(C, it) {
+    var c = C.ctx, P = { type: 'single', ctx: c, kind: 'per', u: it.u, b: it.b, a: it.a, given: ['a', 'b'], ans: it.u, ansPre: c.perAns.pre, ansUnit: c.perAns.u, round: !!C.round };
+    P.expr = { l: it.a, op: '÷', r: it.b, lk: 'a', rk: 'b' };
+    P.segs = [{ t: it.nm + '：' }, { n: c.cmp.swapCol ? it.a : it.b, k: c.cmp.swapCol ? 'a' : 'b' }, { t: (c.cmp.swapCol ? c.top.u : c.bot.u) + '、' }, { n: c.cmp.swapCol ? it.b : it.a, k: c.cmp.swapCol ? 'b' : 'a' }, { t: (c.cmp.swapCol ? c.bot.u : c.top.u) + '　' + c.perName + 'は？' }];
+    return P;
+  }
+  function barChart(C) {
+    var mx = Math.max.apply(null, C.items.map(function (i) { return C.round ? i.u : i.u; }));
+    return '<div class="barch">' + C.items.map(function (it) {
+      return '<div class="r' + (it.nm === C.best ? ' best' : '') + '"><span class="nm">' + esc(it.nm) + '</span><span class="b" style="width:' + Math.max(4, it.u / mx * 62) + '%"></span><span class="v">' + F(it.u) + ' ' + esc(C.ctx.perAns.u) + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  /* =====================================================
+     比べる問題（1つずつ1あたりを出して、くらべる）
+     cfg.mode: 'full'（1つめは図から）/ 'lite'（式と答え）/ 'quick'（判断だけ）
+     ===================================================== */
+  function CompareRunner(host, C, cfg) {
+    var c = C.ctx, alive = claim(host);
+    host.innerHTML = '';
+    var head = el('div');
+    host.appendChild(head);
+    C.showPer = cfg.mode !== 'quick';
+    function drawHead() {
+      head.innerHTML = '<div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + c.icon + '</span>' + C.n + 'つの' + esc(c.cmp.what) + 'を比べます。<span class="askline">' + esc(C.q) + '</span></div>' +
+        cmpTable(C) + (cfg.mode !== 'quick' ? '<div class="nlnote">「' + esc(c.perName) + '」をそれぞれ求めて比べよう。' + (C.round ? '（四しゃ五入して整数）' : '') + '</div>' : '');
+    }
+    drawHead();
+    var body = el('div'); host.appendChild(body);
+    var allFirst = true, idx = 0;
+    function doItem() {
+      if (idx >= C.items.length) return judge();
+      var it = C.items[idx];
+      var steps = cfg.mode === 'full' && idx === 0 ? ['label', 'place', 'arrow', 'expr', 'ans'] : ['expr', 'ans'];
+      var box = el('div', 'card'); box.style.boxShadow = 'none'; box.style.border = '2px solid var(--line)';
+      body.appendChild(box);
+      new Runner(box, itemP(C, it), {
+        steps: steps, exprMode: 'pick', banner: '<b>' + esc(it.nm) + '</b> の' + esc(c.perName), noNote: true, hideText: false,
+        onDone: function (ok) {
+          if (!alive()) return;
+          if (!ok) allFirst = false;
+          it.done = true; drawHead();
+          box.querySelector('.nlbox') && (box.querySelector('.nlbox').parentNode.style.display = 'none');
+          idx++; later(function () { if (!alive()) return; box.style.display = 'none'; doItem(); scrollTo(head); }, 700);
+        }
+      });
+      scrollTo(box);
+    }
+    function judge() {
+      var box = el('div'); body.appendChild(box);
+      var big = c.cmp.better === 'big';
+      box.innerHTML = '<div class="ask">' + esc(C.q) + '</div><div class="opts row">' + C.items.map(function (it) { return '<button class="opt" data-nm="' + esc(it.nm) + '">' + esc(it.nm) + '</button>'; }).join('') + '</div><div class="r2"></div><div class="fb"></div>';
+      var fbx = $('.fb', box), step = 1;
+      box.onclick = function (e) {
+        var b = e.target.closest('[data-nm]');
+        if (b && step === 1) {
+          if (b.getAttribute('data-nm') === C.best) {
+            b.classList.add('ok'); step = 2; fbx.className = 'fb'; fbx.innerHTML = '';
+            var r1 = '「' + c.perName + '」が' + (big ? '大きい' : '小さい') + 'から', r2 = '「' + c.perName + '」が' + (big ? '小さい' : '大きい') + 'から';
+            var r3 = c.top.n + 'が' + (C.n === 2 ? '' : 'いちばん') + adj(c.top.n, big) + 'から';
+            var rs = GEN.shuffle([[r1, 1], [r2, 0], [r3, 0]]);
+            $('.r2', box).innerHTML = '<div class="ask" style="margin-top:14px">理由はどれ？</div><div class="opts">' + rs.map(function (r) { return '<button class="opt wide" data-r="' + r[1] + '">' + esc(r[0]) + '</button>'; }).join('') + '</div>';
+          } else { allFirst = false; b.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = (cfg.mode === 'quick' ? 'それぞれの「' + esc(c.perName) + '」をノートで計算して比べよう。' : '表の「' + esc(c.perName) + '」を見くらべよう。') + (big ? '大きい' : '小さい') + '方が' + esc(c.cmp.good) + 'よ。'; }
+          return;
+        }
+        var r = e.target.closest('[data-r]');
+        if (r && step === 2) {
+          if (r.getAttribute('data-r') === '1') {
+            r.classList.add('ok'); step = 3;
+            fbx.className = 'fb show ok';
+            fbx.innerHTML = '<b>' + esc(C.best) + '</b>。1あたりの大きさにそろえると、いくつでも一度に比べられるね。' + (c.inv ? '<br>「1ぴきあたりの面積」は<b>小さいほど混んでいる</b>。大小が反対になるから気をつけよう。' : '') + barChart(C);
+            cfg.onDone && cfg.onDone(allFirst);
+          } else { allFirst = false; r.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = (r.textContent.indexOf(c.top.n + 'が') === 0 ? '数だけでは決まらないよ。2つの量をそろえた「1あたり」で比べたね。' : '大きい・小さいを、もう一度表で見くらべよう。'); }
+        }
+      };
+      scrollTo(box);
+    }
+    if (cfg.mode === 'quick') judge(); else doItem();
+  }
+
+  /* かたほうがそろっている比べ（計算なし） */
+  function SameRunner(host, C, cfg) {
+    var alive = claim(host);
+    var c = C.ctx, big = c.cmp.better === 'big';
+    var sameQ = C.sameBot ? c.bot : c.top, diffQ = C.sameBot ? c.top : c.bot;
+    host.innerHTML = '<div class="prob"><span class="ic">' + c.icon + '</span>2つの' + esc(c.cmp.what) + 'を比べます。<span class="askline">' + esc(C.q) + '</span></div>' + cmpTable(C) +
+      '<div class="ask" style="margin-top:12px">① 同じになっている（そろっている）のは？</div><div class="opts">' +
+      GEN.shuffle([[c.bot, C.sameBot], [c.top, !C.sameBot]]).map(function (x) { return '<button class="opt wide" data-s="' + (x[1] ? 1 : 0) + '">' + esc(x[0].n) + 'がそろっている</button>'; }).join('') +
+      '</div><div class="s2"></div><div class="fb"></div>';
+    var fbx = $('.fb', host), step = 1, first = true;
+    // 勝つ方：下がそろう→上の数で。上がそろう→下の数で（下が少ない方が1あたりは大きい）
+    var winBig = C.sameBot ? big : !big; // 違う方の量が「多い」方が勝ちか
+    host.onclick = function (e) {
+      if (!alive()) return;
+      var b = e.target.closest('[data-s]');
+      if (b && step === 1) {
+        if (b.getAttribute('data-s') === '1') {
+          b.classList.add('ok'); step = 2; fbx.className = 'fb'; fbx.innerHTML = '';
+          $('.s2', host).innerHTML = '<div class="ask" style="margin-top:14px">② ' + esc(C.q) + '</div><div class="opts row">' + C.items.map(function (it) { return '<button class="opt" data-nm="' + esc(it.nm) + '">' + esc(it.nm) + '</button>'; }).join('') + '</div>' +
+            '<div class="ask" style="margin-top:14px">③ 理由は？</div><div class="opts">' + GEN.shuffle([
+              [sameQ.n + 'が同じだから、' + diffQ.n + 'が' + adj(diffQ.n, winBig) + '方が' + (c.cmp.goodR || c.cmp.good), 1],
+              [sameQ.n + 'が同じだから、' + diffQ.n + 'が' + adj(diffQ.n, !winBig) + '方が' + (c.cmp.goodR || c.cmp.good), 0],
+              ['どちらもちがうから比べられない', 0]]).map(function (r) { return '<button class="opt wide" data-r="' + r[1] + '">' + esc(r[0]) + '</button>'; }).join('') + '</div>';
+          var opts = $('.s2', host).querySelectorAll('.opts')[1]; opts.style.opacity = '.4'; opts.style.pointerEvents = 'none';
+        } else { first = false; b.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = '表の数を、たてに見くらべてみよう。同じ数が入っている列はどれかな？'; }
+        return;
+      }
+      var n = e.target.closest('[data-nm]');
+      if (n && step === 2) {
+        if (n.getAttribute('data-nm') === C.best) {
+          n.classList.add('ok'); step = 3; fbx.className = 'fb'; var opts = $('.s2', host).querySelectorAll('.opts')[1]; opts.style.opacity = ''; opts.style.pointerEvents = '';
+        } else { first = false; n.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = esc(sameQ.n) + 'が同じなら、' + esc(diffQ.n) + 'だけで比べられるよ。'; }
+        return;
+      }
+      var r = e.target.closest('[data-r]');
+      if (r && step === 3) {
+        if (r.getAttribute('data-r') === '1') {
+          r.classList.add('ok'); step = 4; fbx.className = 'fb show ok';
+          fbx.innerHTML = '<b>' + esc(C.best) + '</b>。かたほうの量がそろっていれば、もうかたほうだけで比べられる。<br>では、<b>両方ちがう</b>ときは？ → レベル4では「1あたり」にそろえて比べるよ。';
+          cfg.onDone && cfg.onDone(first);
+        } else { first = false; r.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = r.getAttribute('data-r') === '0' && r.textContent.indexOf('比べられない') >= 0 ? 'かたほうがそろっているから比べられるよ。' : esc(diffQ.n) + 'が' + adj(diffQ.n, winBig) + '方が、' + esc(c.cmp.goodR || c.cmp.good) + 'ね。'; }
+      }
+    };
+  }
+
+  /* 2だんかい */
+  function TwoRunner(host, T, cfg) {
+    var alive = claim(host);
+    host.innerHTML = '';
+    var t = el('div', 'prob');
+    t.innerHTML = (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + T.ctx.icon + '</span>' + T.segs.map(function (s) { return s.n != null ? '<span class="tok">' + F(s.n) + '</span>' : esc(s.t); }).join('');
+    host.appendChild(t);
+    var b1 = el('div'), b2 = el('div'); host.appendChild(b1); host.appendChild(b2);
+    var c = T.ctx, all = true;
+    var st1 = cfg.quick ? ['expr', 'ans'] : ['label', 'place', 'arrow', 'expr', 'ans'];
+    var st2 = cfg.quick ? ['expr', 'ans'] : ['place', 'arrow', 'expr', 'ans'];
+    new Runner(b1, T.s1, {
+      steps: st1, exprMode: cfg.quick ? 'pick' : 'build', hideText: true, noNote: true, noDiagram: cfg.quick,
+      banner: '① まず「' + esc(c.perName) + '」を求めよう',
+      onDone: function (ok, R) {
+        if (!alive()) return;
+        if (!ok) all = false;
+        b1.querySelector('.ctrl').innerHTML = '<div class="bigexpr">① ' + esc(c.perName) + '：' + F(T.s1.a) + ' ÷ ' + F(T.s1.b) + ' ＝ ' + F(T.s1.u) + '（' + esc(c.perAns.u) + '）</div>';
+        b1.querySelector('.steps').style.display = 'none';
+        b1.querySelector('.fb').style.display = 'none';
+        b1.querySelector('.nlbox') && (b1.querySelector('.nlbox').parentNode.style.display = 'none');
+        later(function () {
+          new Runner(b2, T.s2, {
+            steps: st2, exprMode: cfg.quick ? 'pick' : 'build', hideText: true, flip: R.S.flip, noDiagram: cfg.quick,
+            banner: '② 1あたりの <b>' + F(T.s1.u) + '</b> を使って、聞かれていることを求めよう',
+            onDone: function (ok2) { if (!alive()) return; if (!ok2) all = false; cfg.onDone && cfg.onDone(all); }
+          });
+          scrollTo(b2);
+        }, 500);
+      }
+    });
+  }
+
+  /* 単位をかえる */
+  function timeRuler(Q, W) {
+    W = Math.max(300, Math.min(700, W || 640));
+    var H = 170, x0 = 30, x1 = W - 60, y1 = 60, y2 = 120;
+    var frac = Q.toMin ? (Q.d % 1 || 1) : Q.mm / 60;
+    var xm = x0 + (x1 - x0) * frac;
+    var o = '<svg class="nl" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+    o += '<rect x="' + x0 + '" y="' + (y1 - 9) + '" width="' + (xm - x0) + '" height="18" rx="4" fill="var(--top-soft)"/>';
+    o += '<rect x="' + x0 + '" y="' + (y2 - 9) + '" width="' + (xm - x0) + '" height="18" rx="4" fill="var(--bot-soft)"/>';
+    o += '<line x1="' + x0 + '" y1="' + y1 + '" x2="' + x1 + '" y2="' + y1 + '" stroke="var(--top)" stroke-width="5"/>';
+    o += '<line x1="' + x0 + '" y1="' + y2 + '" x2="' + x1 + '" y2="' + y2 + '" stroke="var(--bot)" stroke-width="5"/>';
+    for (var i = 0; i <= 10; i++) {
+      var x = x0 + (x1 - x0) * i / 10, big = i % 5 === 0;
+      o += '<line x1="' + x + '" y1="' + (y1 - (big ? 12 : 7)) + '" x2="' + x + '" y2="' + (y1 + (big ? 12 : 7)) + '" stroke="var(--ink)" stroke-width="' + (big ? 3 : 1.5) + '"/>';
+      o += '<line x1="' + x + '" y1="' + (y2 - (big ? 12 : 7)) + '" x2="' + x + '" y2="' + (y2 + (big ? 12 : 7)) + '" stroke="var(--ink)" stroke-width="' + (big ? 3 : 1.5) + '"/>';
+      if (big || (i === 1 && W > 420)) {
+        o += '<text x="' + x + '" y="' + (y1 - 20) + '" text-anchor="middle" font-size="18" font-weight="700">' + (i * 6) + '</text>';
+        o += '<text x="' + x + '" y="' + (y2 + 34) + '" text-anchor="middle" font-size="18" font-weight="700">' + GEN.fmt(i / 10) + '</text>';
+      }
+    }
+    o += '<line x1="' + xm + '" y1="' + (y1 - 26) + '" x2="' + xm + '" y2="' + (y2 + 14) + '" stroke="var(--arrow)" stroke-width="3" stroke-dasharray="6 5"/>';
+    o += '<text x="' + (x1 + 8) + '" y="' + (y1 + 6) + '" font-size="15" fill="var(--top)" font-weight="700">分</text><text x="' + (x1 + 8) + '" y="' + (y2 + 6) + '" font-size="15" fill="var(--bot)" font-weight="700">時間</text>';
+    return o + '</svg>';
+  }
+  var SP = { s: '秒速', m: '分速', h: '時速' };
+  function ladder(path) {
+    var on = {}; (path || []).forEach(function (p) { on[p] = 1; });
+    return '<div class="ladder"><span class="sp' + (on.s ? ' on' : '') + '">秒速（1秒）</span><span class="ar">×60 →<br>← ÷60</span><span class="sp' + (on.m ? ' on' : '') + '">分速（1分）</span><span class="ar">×60 →<br>← ÷60</span><span class="sp' + (on.h ? ' on' : '') + '">時速（1時間）</span></div>' +
+      '<div class="nlnote">1km ＝ 1000m。時速は km、分速・秒速は m で表すことが多いよ。</div>';
+  }
+  function convWhy(Q) {
+    var t = Q.t;
+    if (t === 's2m') return '1分 ＝ 60秒。1秒に ' + F(Q.x) + 'm 進むから、60秒では ' + F(Q.x) + ' × 60 ＝ <b>' + F(Q.ans) + 'm</b>。';
+    if (t === 'm2s') return '1分 ＝ 60秒。60秒で ' + F(Q.x) + 'm 進むから、1秒では ' + F(Q.x) + ' ÷ 60 ＝ <b>' + F(Q.ans) + 'm</b>。';
+    if (t === 'm2h') return '1時間 ＝ 60分。' + F(Q.x) + ' × 60 ＝ ' + F(Q.x * 60) + '（m）＝ <b>' + F(Q.ans) + 'km</b>。';
+    if (t === 'h2m') return F(Q.x) + 'km ＝ ' + F(Q.x * 1000) + 'm。1時間 ＝ 60分だから、' + F(Q.x * 1000) + ' ÷ 60 ＝ <b>' + F(Q.ans) + 'm</b>。';
+    if (t === 'h2s') return F(Q.x) + 'km ＝ ' + F(Q.x * 1000) + 'm。1時間 ＝ 3600秒（60×60）だから、' + F(Q.x * 1000) + ' ÷ 3600 ＝ <b>' + F(Q.ans) + 'm</b>。';
+    if (t === 'tdec') return Q.mm + '分は、1時間（60分）の ' + Q.mm + ' ÷ 60 ＝ ' + F(fix(Q.mm / 60)) + '。' + Q.h + '時間とあわせて <b>' + F(Q.ans) + '時間</b>。';
+    return '1時間 ＝ 60分。' + F(Q.d) + ' × 60 ＝ <b>' + F(Q.ans) + '分</b>。';
+  }
+  function convNL(Q) {
+    var ctxS = function (bu) { return { icon: '', top: { n: '道のり', u: 'm' }, bot: { n: '時間', u: bu }, perAns: { pre: '', u: 'm' } }; };
+    var P;
+    if (Q.t === 's2m') P = { ctx: ctxS('秒'), kind: 'total', u: Q.x, b: 60, a: Q.ans };
+    if (Q.t === 'm2s') P = { ctx: ctxS('秒'), kind: 'per', u: Q.ans, b: 60, a: Q.x };
+    if (Q.t === 'm2h') P = { ctx: ctxS('分'), kind: 'total', u: Q.x, b: 60, a: Q.x * 60 };
+    if (Q.t === 'h2m') P = { ctx: ctxS('分'), kind: 'per', u: Q.ans, b: 60, a: Q.x * 1000 };
+    if (Q.t === 'h2s') P = { ctx: ctxS('秒'), kind: 'per', u: Q.ans, b: 3600, a: Q.x * 1000 };
+    return P;
+  }
+  function ConvertRunner(host, Q, cfg) {
+    window.__Q = Q; claim(host);
+    host.innerHTML = '<div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + (Q.time ? '⏱️' : '🔁') + '</span>' +
+      Q.segs.map(function (s) { return s.n != null ? '<span class="tok">' + F(s.n) + '</span>' : esc(s.t); }).join('') + '</div>' +
+      (Q.time ? '' : ladder(Q.path)) + '<div class="vis" ' + (cfg.hideVis ? 'style="display:none"' : '') + '><div class="nlbox"></div><div class="nlnote"></div></div><div class="ctrl"><div class="kpw"></div></div><div class="fb"></div>';
+    var vis = $('.vis', host), box = $('.nlbox', host), fbx = $('.fb', host), miss = 0;
+    if (Q.time) { box.innerHTML = timeRuler(Q, box.clientWidth); var whole = Q.toMin ? Math.floor(Q.d) : Q.h;
+      $('.nlnote', host).textContent = '上が分、下が時間。60分 ＝ 1時間、6分 ＝ 0.1時間。' + (Q.toMin ? (whole >= 1 ? whole + '時間 ＝ ' + whole * 60 + '分。のこりの ' + F(fix(Q.d - whole)) + '時間を図で見よう。' : '') : whole + '時間と、のこりの' + Q.mm + '分を図で見よう。'); }
+    else {
+      var P = convNL(Q);
+      mountNL(box, { P: P, mode: 'show', flip: false, lab: null, arrow: 3, prop: false, slot: {} });
+      $('.nlnote', host).textContent = Q.t === 'm2h' ? '1時間（60分）に進む道のりを求めて、mをkmになおそう。' : Q.t === 'h2m' || Q.t === 'h2s' ? 'まず km を m になおしてから考えよう。' : '速さも、2本の数直線でかけるよ。';
+    }
+    var kp = keypad($('.kpw', host), {
+      lead: '<span>' + (Q.pre || '') + '</span>', unit: Q.u,
+      onEnter: function (v) {
+        if (Math.abs(parseFloat(v) - Q.ans) < 1e-9) { kp.lock = true; fbx.className = 'fb show ok'; fbx.innerHTML = 'せいかい！ ' + convWhy(Q); vis.style.display = ''; cfg.onDone && cfg.onDone(miss === 0); return; }
+        miss++; kp.ng(); vis.style.display = '';
+        if (miss >= 2) { kp.lock = true; kp.set(F(Q.ans)); fbx.className = 'fb show ng'; fbx.innerHTML = convWhy(Q); cfg.onDone && cfg.onDone(false); return; }
+        fbx.className = 'fb show ng'; fbx.innerHTML = Q.time ? '60分で1時間。図の目もりを数えてみよう。' : '1分は60秒、1時間は60分。×60 か ÷60 か、図で考えよう。';
+      }
+    });
+  }
+
+  /* えらぶ問題（ひっかけ・考え方） */
+  function TrickRunner(host, Q, cfg) {
+    var alive = claim(host);
+    host.innerHTML = '<div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">🤔</span>' + esc(Q.q) + '</div><div class="opts">' +
+      Q.opts.map(function (o, i) { return '<button class="opt wide" data-i="' + i + '">' + esc(o) + '</button>'; }).join('') + '</div><div class="fb"></div>';
+    var fbx = $('.fb', host), done = false, first = true;
+    host.onclick = function (e) {
+      var b = e.target.closest('[data-i]'); if (!b || done || !alive()) return;
+      if (+b.getAttribute('data-i') === Q.ans) { done = true; b.classList.add('ok'); fbx.className = 'fb show ok'; fbx.innerHTML = 'そのとおり！ ' + esc(Q.why); cfg.onDone && cfg.onDone(first); }
+      else { first = false; b.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = 'ちがうよ。' + esc(Q.why) + '<br>もう一度えらんでみよう。'; }
+    };
+  }
+
+  /* =====================================================
+     タブ
+     ===================================================== */
+  var TABS = [
+    { id: 'shikumi', n: '1', name: 'しくみ' },
+    { id: 'zu', n: '2', name: '図をかく' },
+    { id: 'shiki', n: '3', name: '式と答え' },
+    { id: 'bun', n: '4', name: '文章題' },
+    { id: 'haya', n: '5', name: 'はやさ' },
+    { id: 'test', n: '6', name: 'うでだめし' }
+  ];
+  var main = $('#main');
+  function openTab(id) {
+    REC.ui('tab', id);
+    $('#tabs').innerHTML = TABS.map(function (t) { return '<button class="tab' + (t.id === id ? ' on' : '') + '" data-tab="' + t.id + '"><span class="n">' + t.n + '</span>' + t.name + '</button>'; }).join('');
+    KP.active = null;
+    main.innerHTML = '';
+    window.scrollTo(0, 0);
+    VIEW[id]();
+  }
+  $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) openTab(b.getAttribute('data-tab')); });
+
+  function chipRow(list, cur, onPick, cls) {
+    var row = el('div', 'chips' + (cls ? ' ' + cls : ''));
+    function draw() { row.innerHTML = list.map(function (x) { return '<button class="chip' + (x.k === cur ? ' on' : '') + '" data-c="' + x.k + '">' + x.h + '</button>'; }).join(''); }
+    draw();
+    row.onclick = function (e) { var b = e.target.closest('[data-c]'); if (!b) return; cur = b.getAttribute('data-c'); draw(); onPick(cur); };
+    return row;
+  }
+  var KIND_CHIPS = [{ k: 'per', h: '1あたりを求める' }, { k: 'total', h: '全体を求める' }, { k: 'count', h: 'いくつ分を求める' }, { k: 'mix', h: 'まぜる' }];
+  var NUM_CHIPS = [{ k: '1', h: '整数' }, { k: '2', h: '小数も' }];
+  var lastKind = null;
+  function pickKind(k) { if (k !== 'mix') return k; var c; do { c = GEN.pick(GEN.KINDS); } while (c === lastKind && Math.random() < 0.7); lastKind = c; return c; }
+  var lastCtx = null;
+  function pickCtx(groups, opt) { var c, n = 0; do { c = GEN.pickCtx(groups, opt); n++; } while (c === lastCtx && n < 10); lastCtx = c; return c; }
+
+  var VIEW = {};
+
+  /* ---------- 2 図をかく ---------- */
+  VIEW.zu = function () {
+    var kind = REC.ui('zuKind') || 'mix', lv = REC.ui('zuLv') || '1';
+    main.appendChild(el('div', '', say('文を読んで、<b>2本の数直線</b>をかこう。<br>① 線に名前　② 数を目もりに置く　③ 矢印。この3つを何度もくり返すと、どんな問題でも図がかけるようになるよ。')));
+    main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('zuKind', k); fresh(); }));
+    main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('zuLv', k); fresh(); }));
+    var info = el('div', 'nlnote'); main.appendChild(info);
+    var card = el('div', 'card'); main.appendChild(card);
+    function fresh() {
+      var P = GEN.single(pickCtx(null), pickKind(kind), +lv);
+      var s = REC.d.streak.zu || 0;
+      info.innerHTML = 'ミスなしで続けて ' + s + ' 回' + (s >= 5 ? '　すごい！' : '');
+      new Runner(card, P, {
+        steps: ['label', 'place', 'arrow'],
+        onDone: function (ok) {
+          REC.add('zu_' + P.kind, ok); var n = REC.streak('zu', ok);
+          info.innerHTML = 'ミスなしで続けて ' + n + ' 回' + (n >= 5 ? '　すごい！' : '');
+          var R = card.lastChild;
+          var e = el('div', 'fb show ' + (ok ? 'ok' : 'info'), ok ? '<b>ミスなし！</b> この図があれば、式はすぐ立てられるね。' : '図ができたよ。もう1問やると、もっとはやくかけるようになる。');
+          card.appendChild(e);
+          nextBtn(card, 'つぎの図 ▶', function () { fresh(); scrollTo(card); });
+        }
+      });
+    }
+    fresh();
+  };
+
+  /* ---------- 3 式と答え ---------- */
+  VIEW.shiki = function () {
+    var kind = REC.ui('skKind') || 'mix', lv = REC.ui('skLv') || '1';
+    main.appendChild(el('div', '', say('図はできているよ。<b>矢印を見て式を立てる</b>練習だ。<br>1の列と、わかっている列が矢印でつながっている。もう1本の線にも同じ×や÷をすれば、□が出るよ。')));
+    main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('skKind', k); fresh(); }));
+    main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('skLv', k); fresh(); }));
+    var info = el('div', 'nlnote'); main.appendChild(info);
+    var card = el('div', 'card'); main.appendChild(card);
+    function fresh() {
+      var P = GEN.single(pickCtx(null), pickKind(kind), +lv);
+      info.textContent = 'ミスなしで続けて ' + (REC.d.streak.shiki || 0) + ' 回';
+      new Runner(card, P, {
+        steps: ['expr', 'ans'], exprMode: 'pick', showOnly: true, noNote: true,
+        onDone: function (ok) {
+          REC.add('shiki_' + P.kind, ok); var n = REC.streak('shiki', ok);
+          info.textContent = 'ミスなしで続けて ' + n + ' 回';
+          nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); });
+        }
+      });
+    }
+    fresh();
+  };
+
+  /* ---------- 4 文章題 ---------- */
+  var BUN_LV = [
+    { k: '1', h: '<span class="lv">1</span>そろっていれば' },
+    { k: '2', h: '<span class="lv">2</span>3つの式' },
+    { k: '3', h: '<span class="lv">3</span>小数' },
+    { k: '4', h: '<span class="lv">4</span>くらべる' },
+    { k: '5', h: '<span class="lv">5</span>2だんかい' },
+    { k: '6', h: '<span class="lv">6</span>まぜこぜ' }
+  ];
+  var BUN_SAY = {
+    '1': 'かたほうの量が<b>そろっていれば</b>、もうかたほうだけで比べられるね。まずはここから。',
+    '2': '<b>よむ → 図 → 式 → 答え</b> の順で解こう。1あたり・全体・いくつ分の3つの式が出るよ。',
+    '3': '数が小数になっても、<b>図のかき方は同じ</b>。図をかけば、式は整数のときと同じ形になるよ。',
+    '4': '2つや3つを比べる。それぞれ<b>1あたりの大きさ</b>を求めてから比べよう。',
+    '5': 'まず<b>1あたり</b>を求めて、それを使ってもう1回。2つの図をつなげて考えよう。',
+    '6': 'ぜんぶの型がまざって出るよ。どの量が「1」になるかを、自分で見つけよう。'
+  };
+  function fullCfg(extra) { var c = { steps: ['read', 'label', 'place', 'arrow', 'expr', 'ans'], exprMode: 'build' }; for (var k in extra) c[k] = extra[k]; return c; }
+  VIEW.bun = function () {
+    var lv = REC.ui('bunLv') || '2';
+    var sayBox = el('div'); main.appendChild(sayBox);
+    main.appendChild(chipRow(BUN_LV, lv, function (k) { lv = k; REC.ui('bunLv', k); fresh(); }));
+    var card = el('div', 'card'); main.appendChild(card);
+    var cnt = 0;
+    function fresh() {
+      sayBox.innerHTML = say(BUN_SAY[lv]);
+      var L = lv === '6' ? GEN.pick(['1', '2', '3', '4', '5', '2', '3']) : lv;
+      cnt++;
+      var done = function (cat) { return function (ok) { REC.add('bun_' + cat, ok); nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
+      if (L === '1') SameRunner(card, GEN.sameOne(pickCtx(null, { cmp: true })), { onDone: done('same') });
+      else if (L === '2' || L === '3') { var P = GEN.single(pickCtx(null), pickKind('mix'), L === '3' ? 2 : 1); new Runner(card, P, fullCfg({ onDone: done(P.kind) })); }
+      else if (L === '4') {
+        var r = Math.random(), C;
+        if (r < 0.15) C = GEN.compare(GEN.JINKO, 3);
+        else if (r < 0.3) C = GEN.compare(GEN.BYID.usagi_inv, 2, 1);
+        else C = GEN.compare(pickCtx(null, { cmp: true }), Math.random() < 0.5 ? 2 : 3, 1);
+        CompareRunner(card, C, { mode: 'full', onDone: done('cmp') });
+      }
+      else TwoRunner(card, GEN.twoStep(), { onDone: done('two') });
+    }
+    fresh();
+  };
+
+  /* ---------- 5 はやさ ---------- */
+  VIEW.haya = function () {
+    var mode = REC.ui('hyMode') || 'shiki';
+    var MODES = [{ k: 'shiki', h: '速さ・道のり・時間' }, { k: 'conv', h: '単位をかえる' }, { k: 'cmp', h: 'くらべる・考える' }];
+    var SAYS = {
+      shiki: '速さは「<b>1時間（1分・1秒）あたりに進む道のり</b>」。混みぐあいと同じ図でかけるよ。下の線が時間、上の線が道のり。',
+      conv: '<b>時速・分速・秒速</b>は、×60 と ÷60 で行き来できる。km と m は 1000倍。図で考えよう。',
+      cmp: '速さを比べるときも、<b>どちらかをそろえる</b>。そろえた量じゃない方で比べるよ。'
+    };
+    var sayBox = el('div'); main.appendChild(sayBox);
+    main.appendChild(chipRow(MODES, mode, function (k) { mode = k; REC.ui('hyMode', k); fresh(); }));
+    var card = el('div', 'card'); main.appendChild(card);
+    var rot = 0;
+    function fresh() {
+      sayBox.innerHTML = say(SAYS[mode]);
+      var done = function (cat) { return function (ok) { REC.add('haya_' + cat, ok); nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
+      if (mode === 'shiki') { var P = GEN.single(pickCtx(['haya']), GEN.KINDS[rot++ % 3], Math.random() < 0.6 ? 1 : 2); new Runner(card, P, fullCfg({ onDone: done(P.kind) })); }
+      else if (mode === 'conv') ConvertRunner(card, GEN.convert(), { onDone: done('conv') });
+      else {
+        if (rot++ % 2 === 0) CompareRunner(card, GEN.compare(GEN.BYID[GEN.pick(['walk', 'car', 'run'])], Math.random() < 0.5 ? 2 : 3, 1), { mode: 'lite', onDone: done('cmp') });
+        else { var Q; do { Q = GEN.trick(); } while (['add', 'sameDist', 'sameTime'].indexOf(Q.t) < 0); TrickRunner(card, Q, { onDone: done('trick') }); }
+      }
+    }
+    fresh();
+  };
+
+  /* ---------- 6 うでだめし ---------- */
+  var CAT = { per: '1あたりを求める', total: '全体を求める', count: 'いくつ分を求める', cmp: 'くらべる', two: '2だんかい', conv: '単位をかえる', trick: '考え方' };
+  var CAT_GO = { per: 'shiki', total: 'shiki', count: 'shiki', cmp: 'bun', two: 'bun', conv: 'haya', trick: 'haya' };
+  VIEW.test = function () {
+    var b = REC.d.test.best;
+    main.appendChild(el('div', '', say('10問のうでだめし。図は「図を見る」をおすと出るよ。<b>ノートに図をかいてから</b>答えよう。' + (b != null ? '<br>これまでのいちばん：<b>' + b + '問</b>' : ''))));
+    var card = el('div', 'card'); main.appendChild(card);
+    card.innerHTML = '<button class="next">うでだめしを始める ▶</button>';
+    card.firstChild.onclick = start;
+    function start() {
+      var list = [
+        { c: 'per', mk: function () { return GEN.single(pickCtx(null), 'per', 1); } },
+        { c: 'total', mk: function () { return GEN.single(pickCtx(null), 'total', 1); } },
+        { c: 'count', mk: function () { return GEN.single(pickCtx(null), 'count', 1); } },
+        { c: 'cmp', mk: function () { return GEN.compare(pickCtx(null, { cmp: true }), 2, 1); } },
+        { c: 'two', mk: function () { return GEN.twoStep(); } },
+        { c: 'conv', mk: function () { var Q; do { Q = GEN.convert(); } while (Q.time); return Q; } },
+        { c: 'conv', mk: function () { var Q; do { Q = GEN.convert(); } while (!Q.time); return Q; } },
+        { c: 'trick', mk: function () { var Q; do { Q = GEN.trick(); } while (['add', 'inv'].indexOf(Q.t) < 0); return Q; } },
+        { c: 'trick', mk: function () { var Q; do { Q = GEN.trick(); } while (['sameDist', 'onlyCount', 'sameTime'].indexOf(Q.t) < 0); return Q; } },
+        { c: 'per', mk: function () { return GEN.single(pickCtx(['haya']), 'per', 2); } }
+      ];
+      var res = [], i = 0;
+      card.innerHTML = '';
+      var dots = el('div', 'dots10'); card.appendChild(dots);
+      var host = el('div'); card.appendChild(host);
+      var foot = el('div'); card.appendChild(foot);
+      function drawDots() { dots.innerHTML = list.map(function (x, j) { return '<i class="' + (j < res.length ? (res[j] ? 'ok' : 'ng') : j === i ? 'now' : '') + '"></i>'; }).join(''); }
+      function one() {
+        drawDots(); foot.innerHTML = '';
+        if (i >= list.length) return result();
+        var it = list[i], q = it.mk(), qno = (i + 1) + '/10';
+        var done = function (ok) { res.push(ok); REC.add('test_' + it.c, ok); drawDots(); nextBtn(foot, i < 9 ? 'つぎへ ▶' : 'けっかを見る ▶', function () { i++; one(); scrollTo(card); }); };
+        if (it.c === 'per' || it.c === 'total' || it.c === 'count') {
+          var R = new Runner(host, q, { steps: ['expr', 'ans'], exprMode: 'pick', showOnly: true, noDiagram: true, noNote: true, qno: qno, onDone: done });
+          var sb = el('button', 'btn2', '図を見る'); sb.style.marginTop = '8px';
+          sb.onclick = function () { R.eNLwrap.style.display = ''; mountNL(R.eNL, R.S); sb.remove(); };
+          host.insertBefore(sb, R.eSteps.nextSibling);
+        }
+        else if (it.c === 'cmp') CompareRunner(host, q, { mode: 'quick', qno: qno, onDone: done });
+        else if (it.c === 'two') TwoRunner(host, q, { quick: true, qno: qno, onDone: done });
+        else if (it.c === 'conv') ConvertRunner(host, q, { qno: qno, hideVis: true, onDone: done });
+        else TrickRunner(host, q, { qno: qno, onDone: done });
+      }
+      function result() {
+        var sc = res.filter(Boolean).length;
+        REC.test(sc);
+        var by = {};
+        list.forEach(function (x, j) { var b = by[x.c] || (by[x.c] = { ok: 0, n: 0 }); b.n++; if (res[j]) b.ok++; });
+        var weak = Object.keys(by).filter(function (k) { return by[k].ok < by[k].n; });
+        host.innerHTML = '<div style="text-align:center"><div class="score maru">' + sc + ' / 10</div><div class="nlnote">1回目で正かいした数</div></div>' +
+          '<div class="res">' + Object.keys(by).map(function (k) { return '<div class="r"><span class="nm">' + CAT[k] + '</span><span class="bg"><i style="width:' + (by[k].ok / by[k].n * 100) + '%"></i></span><span>' + by[k].ok + '/' + by[k].n + '</span></div>'; }).join('') + '</div>' +
+          (weak.length ? '<div class="ask" style="margin-top:16px">もう少し練習しよう</div><div class="chips">' + weak.map(function (k) { return '<button class="chip" data-go="' + CAT_GO[k] + '">' + CAT[k] + ' の練習へ</button>'; }).join('') + '</div>' : '<div class="fb show ok">ぜんぶ1回目で正かい！ 図と式の考え方が身についているね。</div>');
+        host.onclick = function (e) { var g = e.target.closest('[data-go]'); if (g) openTab(g.getAttribute('data-go')); };
+        nextBtn(foot, 'もう一度うでだめし ▶', start);
+        drawDots();
+      }
+      one();
+    }
+  };
+
+  /* ---------- 1 しくみ ---------- */
+  VIEW.shikumi = function () {
+    var ex = REC.ui('shEx') || 'komi';
+    var EX = [{ k: 'komi', h: '混みぐあい' }, { k: 'haya', h: '速さ' }, { k: 'three', h: '3つの式' }];
+    main.appendChild(chipRow(EX, ex, function (k) { ex = k; REC.ui('shEx', k); run(); }));
+    var card = el('div', 'card'); main.appendChild(card);
+    function run() { if (card._off) card._off(); card.onclick = null; SHIKUMI[ex](card); }
+    run();
+  };
+  // しくみのスライド。「もどる」「つぎへ」は吹き出しの上に置き、どのスライドでも同じ場所にする
+  // 狭い画面（NARROW）では、絵を縦に並べた形でかく
+  var NARROW = false;
+  function slides(card, list) {
+    if (card._off) card._off();
+    var i = 0;
+    card.innerHTML = '<div class="slnav"><button class="pv">◀ もどる</button><div class="dots"></div><div class="cnt"></div><button class="nx">つぎへ ▶</button></div><div class="sv"></div><div class="scene"></div>';
+    var sv = $('.sv', card), sc = $('.scene', card);
+    function draw() {
+      var s = list[i];
+      NARROW = card.clientWidth < 560;
+      sv.innerHTML = say(s.say);
+      sc.innerHTML = s.draw();
+      // 絵は、画面に残っている高さに収まるように縮める（低い画面でも下が切れない）
+      var sg = sc.querySelector(':scope > svg, :scope > .nlbox > svg');
+      if (sg) {
+        var room = Math.max(sg.parentNode.classList.contains('nlbox') ? (+sg.getAttribute('height') || 300) * 0.88 : 170, window.innerHeight - (sc.getBoundingClientRect().top + window.scrollY) - 20);
+        sg.style.maxHeight = room + 'px'; sg.style.height = 'auto'; sg.style.width = 'auto'; sg.style.maxWidth = '100%'; sg.style.margin = '0 auto';
+      }
+      sc.style.background = s.plain ? 'transparent' : ''; sc.style.border = s.plain ? 'none' : '';
+      $('.dots', card).innerHTML = list.map(function (x, j) { return '<i class="' + (j === i ? 'on' : '') + '"></i>'; }).join('');
+      $('.cnt', card).textContent = (i + 1) + ' / ' + list.length;
+      $('.pv', card).disabled = i === 0;
+      $('.nx', card).textContent = i === list.length - 1 ? 'さいしょから ↺' : 'つぎへ ▶';
+      if (s.after) { var go = function () { s.after(sc); }; requestAnimationFrame(function () { requestAnimationFrame(go); }); }
+    }
+    $('.pv', card).onclick = function () { if (i > 0) { i--; draw(); } };
+    $('.nx', card).onclick = function () { i = i === list.length - 1 ? 0 : i + 1; draw(); };
+    draw();
+    var lastW = card.clientWidth, ro = null;
+    if (window.ResizeObserver) {
+      ro = new ResizeObserver(function () {
+        if (!card.isConnected) { off(); return; }
+        if (card.clientWidth === lastW) return;
+        lastW = card.clientWidth; draw();
+      });
+      ro.observe(card);
+    }
+    function off() { if (ro) ro.disconnect(); ro = null; card._off = null; }
+    card._off = off;
+  }
+  function slideW(card) { return Math.max(300, Math.min(760, card.clientWidth - 30)); }
+
+  // うさぎの絵
+  function rabbit(x, y, s) {
+    s = s || 1;
+    return '<g class="rab" style="transform:translate(' + x + 'px,' + y + 'px)"><g transform="scale(' + s + ')">' +
+      '<ellipse cx="-4" cy="-17" rx="3" ry="8" fill="#fff" stroke="#8b96a6" stroke-width="1.5" transform="rotate(-12 -4 -17)"/><ellipse cx="3" cy="-17" rx="3" ry="8" fill="#fff" stroke="#8b96a6" stroke-width="1.5" transform="rotate(12 3 -17)"/>' +
+      '<ellipse cx="0" cy="2" rx="10" ry="8" fill="#fff" stroke="#8b96a6" stroke-width="1.5"/><circle cx="0" cy="-8" r="7" fill="#fff" stroke="#8b96a6" stroke-width="1.5"/>' +
+      '<circle cx="-2.5" cy="-9" r="1.2" fill="#e05a7a"/><circle cx="2.5" cy="-9" r="1.2" fill="#e05a7a"/></g></g>';
+  }
+  function seeded(n) { var x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); }
+  function pen(px, py, w, h, n, cell, opt) {
+    opt = opt || {};
+    var o = '<g class="fade" data-pen="' + opt.id + '" style="opacity:' + (opt.dim ? .25 : 1) + '">';
+    o += '<rect x="' + px + '" y="' + py + '" width="' + w * cell + '" height="' + h * cell + '" rx="6" fill="#f3f8e8" stroke="#6b8f3a" stroke-width="3"/>';
+    for (var i = 1; i < w; i++) o += '<line x1="' + (px + i * cell) + '" y1="' + py + '" x2="' + (px + i * cell) + '" y2="' + (py + h * cell) + '" stroke="#b9cf95" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    for (var j = 1; j < h; j++) o += '<line x1="' + px + '" y1="' + (py + j * cell) + '" x2="' + (px + w * cell) + '" y2="' + (py + j * cell) + '" stroke="#b9cf95" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    var pos = opt.even ? evenPos(px, py, w, h, n, cell) : randPos(px, py, w, h, n, cell, opt.seed || 1);
+    pos.forEach(function (p, k) { o += rabbit(p[0], p[1], cell / 56); });
+    if (opt.per && !NARROW) for (var a = 0; a < w; a++) for (var b = 0; b < h; b++) o += '<text x="' + (px + a * cell + cell / 2) + '" y="' + (py + b * cell + cell - 6) + '" text-anchor="middle" font-size="' + Math.min(18, Math.floor(cell * 0.86 / (opt.per.length * 0.62))) + '" font-weight="700" fill="#4d6a1f" stroke="#f3f8e8" stroke-width="5" paint-order="stroke">' + opt.per + '</text>';
+    if (opt.label) o += '<text x="' + (px + w * cell / 2) + '" y="' + (py + h * cell + 32) + '" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)">' + opt.label + '</text>';
+    if (opt.sub) o += '<text x="' + (px + w * cell / 2) + '" y="' + (py + h * cell + 60) + '" text-anchor="middle" font-size="21" fill="var(--sub)">' + opt.sub + '</text>';
+    return o + '</g>';
+  }
+  function randPos(px, py, w, h, n, cell, seed) {
+    var r = [], t = 0;
+    while (r.length < n && t < 500) {
+      t++;
+      var x = px + 14 + seeded(seed * 100 + t) * (w * cell - 28), y = py + 24 + seeded(seed * 100 + t + 50) * (h * cell - 34);
+      if (r.some(function (p) { return Math.abs(p[0] - x) < 20 && Math.abs(p[1] - y) < 24; })) continue;
+      r.push([x, y]);
+    }
+    return r;
+  }
+  function evenPos(px, py, w, h, n, cell) {
+    var W = w * cell, H = h * cell, rowsMax = Math.max(1, Math.floor(H / 42)), cols = Math.max(1, Math.round(Math.sqrt(n * W / H)), Math.ceil(n / rowsMax)), rows = Math.ceil(n / cols), r = [];
+    for (var k = 0; k < n; k++) { var c = k % cols, rr = Math.floor(k / cols), inRow = Math.min(cols, n - rr * cols); r.push([px + W * (c + 0.5) / inRow, py + 10 + (H - 14) * (rr + 0.5) / rows]); }
+    return r;
+  }
+  function svgWrap(vb, inner) { return '<svg viewBox="' + vb + '" role="img">' + inner + '</svg>'; }
+
+  var SHIKUMI = {
+    komi: function (card) {
+      var cell = 56;
+      var PA = { w: 2, h: 2, n: 6, id: 'A', seed: 3 }, PB = { w: 2, h: 2, n: 5, id: 'B', seed: 7 }, PC = { w: 3, h: 1, n: 5, id: 'C', seed: 11 };
+      function three(dim, opt) {
+        opt = opt || {};
+        var xy = NARROW ? [[22, 18], [196, 18], [96, 228]] : [[30, 40], [200, 40], [370, 68]];
+        return svgWrap(NARROW ? '0 6 330 352' : '0 26 600 198',
+          pen(xy[0][0], xy[0][1], 2, 2, 6, cell, { id: 'A', seed: 3, dim: dim.A, label: 'A　4㎡', sub: 'うさぎ 6ひき' }) +
+          pen(xy[1][0], xy[1][1], 2, 2, 5, cell, { id: 'B', seed: 7, dim: dim.B, label: 'B　4㎡', sub: 'うさぎ 5ひき' }) +
+          pen(xy[2][0], xy[2][1], 3, 1, 5, cell, { id: 'C', seed: 11, dim: dim.C, label: 'C　3㎡', sub: 'うさぎ 5ひき' }) +
+          (opt.mark ? opt.mark : ''));
+      }
+      var AC = { vb: function () { return NARROW ? '0 2 330 358' : '0 26 600 198'; }, ax: function () { return NARROW ? 109 : 60; }, ay: function () { return NARROW ? 14 : 40; },
+        cx: function () { return NARROW ? 81 : 330; }, cy: function () { return NARROW ? 232 : 68; } };
+      function tiles(px, py, w, h, n, reps, cols, seed, c) {
+        var o = '';
+        for (var k = 0; k < reps; k++) o += pen(px + (k % cols) * w * c, py + Math.floor(k / cols) * h * c, w, h, n, c, { id: 't', seed: seed + k });
+        return o;
+      }
+      slides(card, [
+        { say: '3つのうさぎ小屋があるよ。<b>いちばん混んでいるのはどれ</b>かな？　1マスが1㎡だよ。', draw: function () { return three({}); } },
+        { say: '<b>AとB</b>は、面積が同じ4㎡。うさぎの数が多い<b>A</b>の方が混んでいるね。', draw: function () { return three({ C: 1 }); } },
+        { say: '<b>BとC</b>は、うさぎの数が同じ5ひき。面積がせまい<b>C</b>の方が混んでいる。', draw: function () { return three({ A: 1 }); } },
+        { say: 'では<b>AとC</b>は？　面積もうさぎの数も、どちらもちがう…。<b>数だけ</b>や<b>広さだけ</b>では決められないね。', draw: function () { return three({ B: 1 }); } },
+        { say: '<b>面積をそろえて</b>みよう。Aを3つ、Cを4つならべると、どちらも<b>12㎡</b>。<br>Aは 6×3＝<b>18ひき</b>、Cは 5×4＝<b>20ひき</b>。→ <b>C</b>の方が混んでいる！', draw: function () {
+          if (NARROW) return svgWrap('0 0 300 345', tiles(12, 8, 2, 2, 6, 3, 3, 20, 46) + '<text x="150" y="134" text-anchor="middle" font-size="23" font-weight="700">A×3　12㎡に<tspan fill="var(--top)">18</tspan>ひき</text>' +
+            tiles(15, 160, 3, 1, 5, 4, 2, 40, 45) + '<text x="150" y="285" text-anchor="middle" font-size="23" font-weight="700">C×4　12㎡に<tspan fill="var(--ng)">20</tspan>ひき</text>');
+          return svgWrap('0 0 600 180', tiles(12, 16, 2, 2, 6, 3, 3, 20, 46) + '<text x="150" y="150" text-anchor="middle" font-size="24" font-weight="700">A×3　12㎡に<tspan fill="var(--top)">18</tspan>ひき</text>' +
+            tiles(318, 16, 3, 1, 5, 4, 2, 40, 45) + '<text x="453" y="150" text-anchor="middle" font-size="24" font-weight="700">C×4　12㎡に<tspan fill="var(--ng)">20</tspan>ひき</text>');
+        } },
+        { say: 'でも、毎回そろえる数を考えるのは大変。そこで<b>1㎡にそろえる</b>。うさぎが小屋全体に<b>ならして</b>いると考えるよ。', draw: function () {
+          return svgWrap(AC.vb(), pen(AC.ax(), AC.ay(), 2, 2, 6, cell, { id: 'A', seed: 3, label: 'A', sub: '4㎡に6ひき' }) + pen(AC.cx(), AC.cy(), 3, 1, 5, cell, { id: 'C', seed: 11, label: 'C', sub: '3㎡に5ひき' }));
+        }, after: function (sc) {
+          var even = svgWrap(AC.vb(), pen(AC.ax(), AC.ay(), 2, 2, 6, cell, { id: 'A', even: true, label: 'A', sub: '4㎡に6ひき' }) + pen(AC.cx(), AC.cy(), 3, 1, 5, cell, { id: 'C', even: true, label: 'C', sub: '3㎡に5ひき' }));
+          var tmp = document.createElement('div'); tmp.innerHTML = even;
+          var to = tmp.querySelectorAll('.rab'), from = sc.querySelectorAll('.rab');
+          later(function () { from.forEach(function (g, k) { if (to[k]) g.style.transform = to[k].style.transform; }); }, 500);
+        } },
+        { say: '1㎡あたりのうさぎの数は、<br>A：6 ÷ 4 ＝ <b>1.5</b>（ひき）　C：5 ÷ 3 ＝ <b>1.66…</b>（ひき）<br>1㎡あたりで比べても、<b>C</b>が混んでいる。', draw: function () {
+          return svgWrap(AC.vb(), pen(AC.ax(), AC.ay(), 2, 2, 6, cell, { id: 'A', even: true, per: '1.5', label: 'A', sub: '1㎡あたり1.5ひき' }) + pen(AC.cx(), AC.cy(), 3, 1, 5, cell, { id: 'C', even: true, per: '1.66…', label: 'C', sub: '1㎡あたり1.66…ひき' }));
+        } },
+        { say: '数直線にすると、こうなる。下の線は <b>4㎡ → 1㎡ で ÷4</b>。上の線のうさぎの数も、<b>同じように ÷4</b>。', plain: true, draw: function () {
+          var P = { ctx: GEN.BYID.usagi, kind: 'per', u: 1.5, b: 4, a: 6 };
+          return '<div class="nlbox">' + NL.draw({ P: P, mode: 'show', flip: false, lab: null, arrow: 3, prop: true, slot: {} }, slideW(card)) + '</div>';
+        } },
+        { say: '1㎡あたりの数にすると、<b>いくつでも一度に比べられる</b>。<br>このように「1あたり」にそろえた大きさを、<b>単位量あたりの大きさ</b>というよ。', plain: true, draw: function () {
+          return barChart({ items: [{ nm: 'A', u: 1.5 }, { nm: 'B', u: 1.25 }, { nm: 'C', u: 1.66 }], best: 'C', ctx: { perAns: { u: 'ひき' } } }).replace('1.66 ', '1.66… ');
+        } },
+        { say: '「<b>1ぴきあたりの面積</b>」でも比べられる。A：4÷6＝0.66…㎡、C：3÷5＝0.6㎡。<br>こちらは<b>小さい方が混んでいる</b>。大小が反対になるから気をつけよう。ふつうは「1㎡あたりの数（大きいほど混む）」を使うよ。', plain: true, draw: function () {
+          return '<div class="scr"><table class="ctab"><tr><th></th><th>1㎡あたりの数</th><th>1ぴきあたりの面積</th></tr><tr><td>A</td><td class="c2">1.5ひき</td><td class="c1">0.66…㎡</td></tr><tr><td>C</td><td class="c2"><b>1.66…ひき（大）</b></td><td class="c1"><b>0.6㎡（小）</b></td></tr><tr><td></td><td>大きい方が混む</td><td>小さい方が混む</td></tr></table></div>';
+        } }
+      ]);
+    },
+    haya: function (card) {
+      function track(anim) {
+        var o = '<g font-weight="700">';
+        if (NARROW) {
+          [['あおい', 100, 20, 66, 'var(--top)'], ['ゆうと', 72, 12, 166, 'var(--bot)']].forEach(function (r) {
+            var len = r[1] * 2.6;
+            o += '<text x="16" y="' + (r[3] - 26) + '" font-size="20">' + r[0] + '<tspan fill="var(--sub)" font-size="18">　' + r[1] + 'm・' + r[2] + '秒</tspan></text>';
+            o += '<line x1="22" y1="' + r[3] + '" x2="' + (22 + len) + '" y2="' + r[3] + '" stroke="#cfd7e0" stroke-width="12" stroke-linecap="round"/>';
+            o += '<circle class="runner" data-len="' + len + '" data-t="' + r[2] + '" cx="22" cy="' + r[3] + '" r="12" fill="' + r[4] + '" style="transition:transform ' + (r[2] / 5) + 's linear"/>';
+          });
+          return svgWrap('0 0 300 200', o + '</g>');
+        }
+        [['あおい', 100, 20, 60, 'var(--top)'], ['ゆうと', 72, 12, 150, 'var(--bot)']].forEach(function (r) {
+          var len = r[1] * 3.9;
+          o += '<text x="20" y="' + (r[3] + 6) + '" font-size="19">' + r[0] + '</text>';
+          o += '<line x1="100" y1="' + r[3] + '" x2="' + (100 + len) + '" y2="' + r[3] + '" stroke="#cfd7e0" stroke-width="12" stroke-linecap="round"/>';
+          o += '<text x="' + (100 + len + 10) + '" y="' + (r[3] + 6) + '" font-size="17" fill="var(--sub)">' + r[1] + 'm・' + r[2] + '秒</text>';
+          o += '<circle class="runner" data-len="' + len + '" data-t="' + r[2] + '" cx="100" cy="' + r[3] + '" r="13" fill="' + r[4] + '" style="transition:transform ' + (r[2] / 5) + 's linear"/>';
+        });
+        return svgWrap('0 0 640 210', o + '</g>');
+      }
+      function sec() {
+        var o = '<g font-weight="700">';
+        if (NARROW) {
+          [['あおい', 5, 76, 'var(--top)'], ['ゆうと', 6, 196, 'var(--bot)']].forEach(function (r) {
+            var st = r[1] * 7;
+            o += '<text x="12" y="' + (r[2] - 46) + '" font-size="20">' + r[0] + '<tspan font-size="19">　1秒に ' + r[1] + 'm</tspan></text>';
+            for (var k = 0; k <= 6; k++) { var x = 16 + k * st; o += '<line x1="' + x + '" y1="' + (r[2] - 10) + '" x2="' + x + '" y2="' + (r[2] + 10) + '" stroke="' + r[3] + '" stroke-width="3"/>'; if (k) o += '<text x="' + (x - st / 2) + '" y="' + (r[2] - 16) + '" text-anchor="middle" font-size="15" fill="var(--sub)">1秒</text>'; }
+            o += '<line x1="16" y1="' + r[2] + '" x2="' + (16 + 6 * st) + '" y2="' + r[2] + '" stroke="' + r[3] + '" stroke-width="4"/>';
+          });
+          return svgWrap('0 0 290 220', o + '</g>');
+        }
+        [['あおい', 5, 60, 'var(--top)'], ['ゆうと', 6, 150, 'var(--bot)']].forEach(function (r) {
+          o += '<text x="20" y="' + (r[2] + 6) + '" font-size="19">' + r[0] + '</text>';
+          for (var k = 0; k <= 6; k++) { var x = 100 + k * r[1] * 11; o += '<line x1="' + x + '" y1="' + (r[2] - 12) + '" x2="' + x + '" y2="' + (r[2] + 12) + '" stroke="' + r[3] + '" stroke-width="3"/>'; if (k) o += '<text x="' + (x - r[1] * 5.5) + '" y="' + (r[2] - 18) + '" text-anchor="middle" font-size="13" fill="var(--sub)">1秒</text>'; }
+          o += '<line x1="100" y1="' + r[2] + '" x2="' + (100 + 6 * r[1] * 11) + '" y2="' + r[2] + '" stroke="' + r[3] + '" stroke-width="4"/>';
+          o += '<text x="' + (110 + 6 * r[1] * 11) + '" y="' + (r[2] + 6) + '" font-size="18">1秒に ' + r[1] + 'm</text>';
+        });
+        return svgWrap('0 0 640 210', o + '</g>');
+      }
+      slides(card, [
+        { say: 'あおいさんは <b>100mを20秒</b>、ゆうとさんは <b>72mを12秒</b> で走った。<b>どちらが速い</b>かな？（下の絵が動くよ）', draw: function () { return track(); }, after: function (sc) {
+          later(function () { sc.querySelectorAll('.runner').forEach(function (c) { c.style.transform = 'translateX(' + c.getAttribute('data-len') + 'px)'; }); }, 300);
+        } },
+        { say: '道のりも時間もちがう。<b>混みぐあいと同じ</b>で、どちらかを<b>そろえる</b>と比べられるよ。', plain: true, draw: function () {
+          return '<div class="scr"><table class="ctab"><tr><th></th><th>上の線（比べる量）</th><th>下の線（〜あたり）</th></tr><tr><td>混みぐあい</td><td class="c2">うさぎの数</td><td class="c1">面積</td></tr><tr><td>速さ</td><td class="c2">道のり</td><td class="c1">時間</td></tr></table></div>';
+        } },
+        { say: '<b>時間を1秒にそろえる</b>。1秒あたりに進む道のりは、あおいさん 100÷20＝<b>5m</b>、ゆうとさん 72÷12＝<b>6m</b>。', draw: function () { return sec(); } },
+        { say: '数直線でも同じ。<b>20秒 → 1秒 は ÷20</b>。道のりも ÷20。', plain: true, draw: function () {
+          var P = { ctx: GEN.BYID.run, kind: 'per', u: 5, b: 20, a: 100 };
+          return '<div class="nlbox">' + NL.draw({ P: P, mode: 'show', flip: false, lab: null, arrow: 3, prop: true, slot: {} }, slideW(card)) + '</div>';
+        } },
+        { say: '1秒あたりに進む道のりで表した速さを<b>秒速</b>というよ。ゆうとさんは<b>秒速6m</b>で、あおいさん（秒速5m）より速い。<br><b>速さ ＝ 道のり ÷ 時間</b>', plain: true, draw: function () { return ladder(['s']); } },
+        { say: '1分あたりなら<b>分速</b>、1時間あたりなら<b>時速</b>。秒速5mは、60秒では 5×60＝300m だから<b>分速300m</b>。', plain: true, draw: function () { return ladder(['s', 'm']); } }
+      ]);
+    },
+    three: function (card) {
+      var sets = [
+        { k: 'walk', u: 70, b: 12, a: 840, nm: '歩く' },
+        { k: 'usagi', u: 3, b: 6, a: 18, nm: 'うさぎ小屋' },
+        { k: 'note', u: 120, b: 5, a: 600, nm: 'ノート' }
+      ];
+      var si = 0, kind = 'per';
+      function draw() {
+        var s = sets[si], c = GEN.BYID[s.k];
+        var P = GEN.single(c, kind, 1); P.u = s.u; P.b = s.b; P.a = s.a;
+        P.expr = kind === 'per' ? { l: s.a, op: '÷', r: s.b } : kind === 'total' ? { l: s.u, op: '×', r: s.b } : { l: s.a, op: '÷', r: s.u };
+        P.segs = GEN.segs(c.t[kind], { a: s.a, b: s.b, u: s.u });
+        var ans = kind === 'per' ? s.u : kind === 'total' ? s.a : s.b;
+        card.innerHTML = say('どの問題も、<b>1の列</b>と<b>わかっている列</b>を矢印でつなぐ。<br>□がどこにあっても、<b>図の形は同じ</b>だよ。場面と求めるものを切りかえてみよう。') +
+          '<div class="chips">' + sets.map(function (x, j) { return '<button class="chip' + (j === si ? ' on' : '') + '" data-s="' + j + '">' + x.nm + '</button>'; }).join('') + '</div>' +
+          '<div class="chips">' + KIND_CHIPS.slice(0, 3).map(function (x) { return '<button class="chip' + (x.k === kind ? ' on' : '') + '" data-k="' + x.k + '">' + x.h + '</button>'; }).join('') + '</div>' +
+          '<div class="prob"><span class="ic">' + c.icon + '</span>' + P.segs.map(function (g) { return g.n != null ? '<span class="tok ' + (g.k === 'b' ? 'bot' : 'top') + '">' + F(g.n) + '</span>' : esc(g.t); }).join('') + '</div>' +
+          '<div class="nlbox"></div>' +
+          '<div class="note"><h4>式</h4>' + (kind === 'count' ? '<div class="ln">' + F(s.u) + ' × □ ＝ ' + F(s.a) + '</div>' : '') +
+          '<div class="ln">□ ＝ ' + F(P.expr.l) + ' ' + P.expr.op + ' ' + F(P.expr.r) + ' ＝ ' + F(ans) + '</div></div>';
+        mountNL($('.nlbox', card), { P: P, mode: 'show', final: true, flip: false, lab: null, arrow: 3, prop: true, slot: {} });
+      }
+      card.onclick = function (e) {
+        var a = e.target.closest('[data-s]'), b = e.target.closest('[data-k]');
+        if (a) { si = +a.getAttribute('data-s'); draw(); } else if (b) { kind = b.getAttribute('data-k'); draw(); }
+      };
+      draw();
+    }
+  };
+
+  /* ---------- 文字の大きさ ---------- */
+  function setBig(on) { document.body.classList.toggle('big', on); $('#fsBtn').textContent = on ? 'あ 中' : 'あ 大'; REC.ui('big', on); }
+  $('#fsBtn').onclick = function () { setBig(!document.body.classList.contains('big')); };
+  setBig(!!REC.ui('big'));
+  $('#stToday').textContent = REC.d.today;
+
+  var foot = el('div', 'foot', 'くらべ方ラボ　記録はこのたんまつだけに残ります（送信はしません）');
+  document.body.appendChild(foot);
+
+  openTab(REC.ui('tab') || 'shikumi');
+  window.__LAB = { GEN: GEN, NL: NL, REC: REC, openTab: openTab };
+})();
+
+</script>
+</body>
+</html>
