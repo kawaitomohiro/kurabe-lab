@@ -251,9 +251,61 @@ body.big .prob{font-size:26px}
   .kp .fn{font-size:14px;line-height:1.2}
   .stat .lbl{display:none}
 }
+
+/* ---------- トップ画面 ---------- */
+.splash{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 50% 40%,#22517f 0%,#173a5e 55%,#10294a 100%);color:#fff;transition:opacity .55s ease}
+.splash.out{opacity:0;pointer-events:none}
+html.sp-on,html.sp-on body{overflow:hidden}
+.sp-in{text-align:center;width:min(560px,100%)}
+.sp-hk{width:118px;height:118px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.25));animation:spPop .6s cubic-bezier(.3,1.6,.5,1) both}
+.sp-t{font-size:clamp(42px,10vw,68px);font-weight:900;letter-spacing:.06em;margin-top:6px;line-height:1.2;animation:spUp .5s .15s both}
+.sp-s{font-size:clamp(17px,4.4vw,22px);font-weight:700;color:#cfe0f0;margin-top:4px;animation:spUp .5s .3s both}
+.sp-nl{width:100%;max-width:520px;margin:18px auto 6px;display:block}
+.sp-ln{stroke-dasharray:480;stroke-dashoffset:480;animation:spDraw .6s .45s ease-out forwards}
+.sp-ln.sp-d1{animation-delay:.6s}
+.sp-pop{opacity:0;transform-box:fill-box;transform-origin:center;animation:spPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+.sp-d2{animation-delay:1.0s}.sp-d3{animation-delay:1.15s}.sp-d5{animation-delay:1.5s}
+.sp-ar{stroke-dasharray:340;stroke-dashoffset:340;animation:spDraw .45s 1.2s ease-out forwards}
+.sp-k{font-size:clamp(16px,4vw,20px);font-weight:700;color:#ffd23f;letter-spacing:.06em;animation:spUp .5s 1.5s both}
+.sp-k span{color:#fff}
+@keyframes spPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes spUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes spDraw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.splash *{animation:none!important;opacity:1!important;stroke-dashoffset:0!important}}
 </style>
 </head>
 <body>
+<div id="splash" class="splash" aria-label="くらべ方ラボ">
+  <div class="sp-in">
+    <svg class="sp-hk" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#dff5f2"/><path d="M12 64c1-12 9-18 20-18s19 6 20 18z" fill="#fff" stroke="#b8c6d3" stroke-width="1.5"/><path d="M28 46l4 8 4-8" fill="#13a39a"/><circle cx="32" cy="30" r="15" fill="#ffe1c4"/><path d="M15 26c-2-8 4-14 8-12 1-5 8-6 10-2 4-3 11 0 10 6 5 1 7 7 4 11-2-6-5-8-7-8-6 2-14 2-20-1-2 2-4 4-5 6z" fill="#eef1f4" stroke="#c4ccd6"/><circle cx="26" cy="31" r="5" fill="#fff" stroke="#173a5e" stroke-width="2"/><circle cx="38" cy="31" r="5" fill="#fff" stroke="#173a5e" stroke-width="2"/><path d="M31 31h2" stroke="#173a5e" stroke-width="2"/><circle cx="26" cy="31" r="1.8" fill="#173a5e"/><circle cx="38" cy="31" r="1.8" fill="#173a5e"/><path d="M27 39q5 4 10 0" fill="none" stroke="#a0573a" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="sp-t maru">くらべ方ラボ</div>
+    <div class="sp-s">単位量あたりの大きさ・速さ</div>
+    <svg class="sp-nl" viewBox="0 0 520 198" aria-hidden="true">
+      <g font-family="BIZ UDPGothic,sans-serif" font-weight="700">
+        <line class="sp-ln" x1="30" y1="62" x2="500" y2="62" stroke="#5b9bff" stroke-width="6" stroke-linecap="round"/>
+        <line class="sp-ln sp-d1" x1="30" y1="132" x2="500" y2="132" stroke="#f08a3a" stroke-width="6" stroke-linecap="round"/>
+        <g class="sp-pop sp-d2"><rect x="112" y="40" width="36" height="36" rx="6" fill="#fff" stroke="#5b9bff" stroke-width="4"/><line x1="130" y1="78" x2="130" y2="118" stroke="#9fb7cc" stroke-width="2" stroke-dasharray="5 5"/><circle cx="130" cy="132" r="19" fill="#ffd23f"/><text x="130" y="140" text-anchor="middle" font-size="22" fill="#2a2310">1</text></g>
+        <g class="sp-pop sp-d3"><rect x="400" y="42" width="72" height="34" rx="17" fill="#fff" stroke="#5b9bff" stroke-width="3"/><text x="436" y="67" text-anchor="middle" font-size="22" fill="#173a5e">600</text><line x1="436" y1="78" x2="436" y2="118" stroke="#9fb7cc" stroke-width="2" stroke-dasharray="5 5"/><circle cx="436" cy="132" r="19" fill="#fff" stroke="#f08a3a" stroke-width="3"/><text x="436" y="140" text-anchor="middle" font-size="22" fill="#173a5e">5</text></g>
+        <path class="sp-ar sp-d4" d="M430 34 Q283 -4 140 34" fill="none" stroke="#3ccf8e" stroke-width="5" stroke-linecap="round"/>
+        <path class="sp-ar sp-d4" d="M430 160 Q283 198 140 160" fill="none" stroke="#3ccf8e" stroke-width="5" stroke-linecap="round"/>
+        <g class="sp-pop sp-d5"><rect x="250" y="2" width="66" height="32" rx="16" fill="#1f9a5c"/><text x="283" y="26" text-anchor="middle" font-size="20" fill="#fff">÷5</text><rect x="250" y="160" width="66" height="32" rx="16" fill="#1f9a5c"/><text x="283" y="184" text-anchor="middle" font-size="20" fill="#fff">÷5</text></g>
+      </g>
+    </svg>
+    <div class="sp-k">5年 算数　<span>そろえて、くらべる。</span></div>
+  </div>
+</div>
+<script>
+/* トップ画面：2.8秒見せてからアプリへ（カワイさんの決まり・★17） */
+(function () {
+  var s = document.getElementById('splash');
+  if (window.__noSplash) { s.parentNode.removeChild(s); return; }
+  document.documentElement.classList.add('sp-on');
+  setTimeout(function () {
+    s.classList.add('out'); document.documentElement.classList.remove('sp-on');
+    setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 600);
+  }, 2800);
+})();
+</script>
 <div class="bar">
   <div class="bar-in">
     <div class="logo maru"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M12 3h8v3h-1v7l8 13a3 3 0 0 1-2.6 4.5H7.6A3 3 0 0 1 5 26l8-13V6h-1z" fill="#fff" opacity=".95"/><path d="M8.5 22h15l2.2 3.6a1.6 1.6 0 0 1-1.4 2.4H7.7a1.6 1.6 0 0 1-1.4-2.4z" fill="#13a39a"/><circle cx="14" cy="25" r="1.4" fill="#ffd23f"/><circle cx="19" cy="24" r="1" fill="#fff"/></svg>
