@@ -270,6 +270,33 @@ body.big .prob{font-size:26px}
   .stat .lbl{display:none}
 }
 
+/* ---------- 4ます：上は1行・横長の画面は左右2列（1画面に収める） ---------- */
+.yonhead{display:flex;align-items:center;gap:8px;margin:0 0 8px;flex-wrap:wrap}
+.yonhead .yh-hk svg{display:block}
+.yonhead .yh-t{flex:1;min-width:0;font-size:15px;font-weight:700;color:var(--sub);line-height:1.4}
+.yonhead .yh-t b{color:var(--navy2);font-size:17px}
+.yonhead .yh-set{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:700;font-size:15px;min-height:40px;color:var(--navy2)}
+.yonpanel{margin:0 0 8px}
+.yonpanel .chips{margin:0 0 8px}
+body.yonmode main{padding-top:10px}
+body.yonmode .card{padding:12px 16px}
+.yonr .prob{margin:0 0 2px;line-height:1.7}
+.yonr .steps{margin:4px 0 6px}
+.yonr .ctrl{margin-top:8px}
+@media (min-width:900px) and (min-aspect-ratio:1/1){.yonr .ctrl{margin-top:0}}
+.yonr .note{margin-top:8px}
+.yonr .note .ln{font-size:21px;margin:2px 6px}
+.yonr .next{margin-top:10px}
+@media (min-width:900px) and (min-aspect-ratio:1/1){
+  body.yonmode main{max-width:1280px}
+  body.yonmode .bar-in,body.yonmode .tabs{max-width:1280px}
+  .yonr{display:flex;gap:20px;align-items:flex-start}
+  .yonr .yl{flex:1.15 1 0;min-width:0}
+  .yonr .yr{flex:1 1 0;min-width:0;padding-top:4px}
+  .yonr .yr .opts:has(.opt.wide){grid-template-columns:1fr}
+  .yonr .yr .opt.wide{min-height:64px}
+}
+
 /* ---------- トップ画面 ---------- */
 .splash{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 50% 40%,#22517f 0%,#173a5e 55%,#10294a 100%);color:#fff;transition:opacity .55s ease}
 .splash.out{opacity:0;pointer-events:none}
@@ -982,6 +1009,18 @@ var NL = (function () {
   function claim(host) { host._gen = (host._gen || 0) + 1; var g = host._gen; host.onclick = null; return function () { return host._gen === g && document.body.contains(host); }; }
   // 「1ぴき」の読み
   function ichi(u) { return ({ 'ひき': '1ぴき' })[u] || '1' + u; }
+
+  /* ---------- 全画面：トップ画面のあと、最初にどこかを押したら全画面にする（ブラウザの決まりで、押す前にはできない） ---------- */
+  (function () {
+    if (window.__noFS) return;
+    function go() {
+      document.removeEventListener('pointerdown', go, true);
+      var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+      if (!f || document.fullscreenElement || document.webkitFullscreenElement) return;
+      try { var p = f.call(d); if (p && p.catch) p.catch(function () { }); } catch (e) { }
+    }
+    document.addEventListener('pointerdown', go, true);
+  })();
 
   function toast(msg) { var t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = later(function () { t.classList.remove('on'); }, 1800); }
 
@@ -1855,7 +1894,7 @@ var NL = (function () {
     var labW = narrow ? 92 : 128, gw = Math.min(W - labW - 24, 440);
     var ox = Math.max(6, (W - (labW + 12 + gw)) / 2);
     var gx0 = ox + labW + 12, cw = gw / 2, xm = gx0 + cw, xL = gx0 + cw / 2, xR = gx0 + cw * 1.5;
-    var rowH = narrow ? 82 : 88, yA = 74, yTop = yA + rowH / 2, yMid = yA + rowH, yBot = yA + rowH * 1.5, yB = yA + rowH * 2, H = yB + 74;
+    var rowH = narrow ? 78 : 84, yA = 64, yTop = yA + rowH / 2, yMid = yA + rowH, yBot = yA + rowH * 1.5, yB = yA + rowH * 2, H = yB + 62;
     var fs = narrow ? 20 : 23, fsL = narrow ? 15 : 17;
     var show = S.mode === 'show', id = 'yon' + Math.floor(Math.random() * 1e9);
     var slot = S.slot, lab0 = S.lab;
@@ -1909,7 +1948,7 @@ var NL = (function () {
       var oneRow = slot.tL === 'one' || slot.tR === 'one' ? 'top' : 'bot', x1 = oneCol === 'L' ? xL : xR, x2 = oneCol === 'L' ? xR : xL;
       var lab = YON.lab(P);
       var arw = function (top, label, done, cls) {
-        var y0 = top ? yA - 6 : yB + 6, cy = top ? yA - 66 : yB + 66, ly = top ? yA - 36 : yB + 36, d = x2 > x1 ? 8 : -8;
+        var y0 = top ? yA - 6 : yB + 6, cy = top ? yA - 62 : yB + 62, ly = top ? yA - 34 : yB + 34, d = x2 > x1 ? 8 : -8;
         var colr = done ? 'var(--arrow)' : 'var(--sub)', w = Math.max(64, yTw(label, fs) + 26);
         return '<g class="arw ' + cls + '"><path d="M' + (x1 + d) + ' ' + y0 + ' Q' + xm + ' ' + cy + ' ' + (x2 - d) + ' ' + y0 + '" fill="none" stroke="' + colr + '" stroke-width="3.5"' + (done ? '' : ' stroke-dasharray="8 6"') + ' marker-end="url(#' + id + (done ? 'h' : 'q') + ')"/>' +
           '<rect x="' + (xm - w / 2) + '" y="' + (ly - 19) + '" width="' + w + '" height="38" rx="19" fill="' + (done ? 'var(--arrow)' : 'var(--card)') + '" stroke="' + colr + '" stroke-width="2.5"/>' +
@@ -1941,13 +1980,16 @@ var NL = (function () {
     R.steps = steps; R.si = 0;
     R.S = { P: P, flip: false, lab: { top: null, bot: null }, slot: { tL: null, tR: null, bL: null, bR: null }, arrow: 0, wrong: {}, hint: {}, sel: null };
     host.innerHTML = '';
-    R.eText = el('div', 'prob'); host.appendChild(R.eText);
-    R.eSteps = el('div', 'steps'); host.appendChild(R.eSteps);
-    R.eNLwrap = el('div'); host.appendChild(R.eNLwrap);
+    var wrap = el('div', 'yonr'), L = el('div', 'yl'), Rt = el('div', 'yr');
+    wrap.appendChild(L); wrap.appendChild(Rt); host.appendChild(wrap);
+    R.eL = L; R.eR = Rt;
+    R.eText = el('div', 'prob'); L.appendChild(R.eText);
+    R.eSteps = el('div', 'steps'); L.appendChild(R.eSteps);
+    R.eNLwrap = el('div'); L.appendChild(R.eNLwrap);
     R.eNL = el('div', 'nlbox yonbox'); R.eNLwrap.appendChild(R.eNL);
-    R.eCtrl = el('div', 'ctrl'); host.appendChild(R.eCtrl);
-    R.eFb = el('div', 'fb'); host.appendChild(R.eFb);
-    R.eEnd = el('div'); host.appendChild(R.eEnd);
+    R.eCtrl = el('div', 'ctrl'); Rt.appendChild(R.eCtrl);
+    R.eFb = el('div', 'fb'); Rt.appendChild(R.eFb);
+    R.eEnd = el('div'); Rt.appendChild(R.eEnd);
     R.eNL.addEventListener('click', function (e) { R.onY(e); });
     R.eText.addEventListener('click', function (e) { var t = e.target.closest('.tok.tap'); if (t) R.onTok(t); });
     R.go(0);
@@ -2179,14 +2221,16 @@ var NL = (function () {
   YonRunner.prototype.finish = function () {
     var R = this, P = R.P, e = P.expr, S = R.S;
     R.eCtrl.innerHTML = ''; R.eCtrl.onclick = null; KP.active = null;
+    var two = R.eR.offsetTop === R.eL.offsetTop && R.eR.offsetLeft > R.eL.offsetLeft;  // 左右2列で出ているか
     var note = el('div', 'note');
-    note.innerHTML = '<h4>ノートにはこう書こう</h4><div class="nlbox yonbox"></div>' +
+    note.innerHTML = '<h4>ノートにはこう書こう' + (two ? '（左の4ますも）' : '') + '</h4>' + (two ? '' : '<div class="nlbox yonbox"></div>') +
       '<div class="ln">' + yEq(P, 'u', 'b', 'a') + '</div>' +
       (P.kind !== 'total' ? '<div class="ln">□ ＝ ' + exprText(P, e.l, e.op, e.r) + ' ＝ ' + F(P.ans) + '</div>' : '<div class="ln">□ ＝ ' + F(P.ans) + '</div>') +
       '<div class="ln">答え　' + ansText(P, P.ans) + '</div>';
     R.eEnd.appendChild(note);
-    yonMount($('.yonbox', note), { P: P, mode: 'show', flip: S.flip, lab: { top: S.lab.top, bot: S.lab.bot }, slot: { tL: S.slot.tL, tR: S.slot.tR, bL: S.slot.bL, bR: S.slot.bR } });
-    R.eNLwrap.style.display = 'none';
+    var fin = { P: P, mode: 'show', flip: S.flip, lab: { top: S.lab.top, bot: S.lab.bot }, slot: { tL: S.slot.tL, tR: S.slot.tR, bL: S.slot.bL, bR: S.slot.bR } };
+    if (two) yonMount(R.eNL, fin);
+    else { yonMount($('.yonbox', note), fin); R.eNLwrap.style.display = 'none'; }
     if (R.cfg.onDone) R.cfg.onDone(R.firstTry, R);
   };
 
@@ -2207,6 +2251,7 @@ var NL = (function () {
     REC.ui('tab', id);
     $('#tabs').innerHTML = TABS.map(function (t) { return '<button class="tab' + (t.id === id ? ' on' : '') + '" data-tab="' + t.id + '"><span class="n">' + t.n + '</span>' + t.name + '</button>'; }).join('');
     KP.active = null;
+    document.body.classList.remove('yonmode');
     main.innerHTML = '';
     window.scrollTo(0, 0);
     VIEW[id]();
@@ -2352,19 +2397,29 @@ var NL = (function () {
   var YON_NUM = [{ k: '1', h: '整数' }, { k: '2', h: '小数も' }, { k: 'h', h: '速さ' }];
   VIEW.yon = function () {
     var kind = 'per', lv = '1';   // タブを開いたら、いつも左端から
-    main.appendChild(el('div', '', say('文章題を読んで、<b>4ます</b>をうめよう。<br>① 2つの量を上と下に　② 文に出てくる数　③ 1と□。<br>1 から「何倍？」の矢印をかくと、もう1つの段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。')));
-    main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; fresh(); }));
-    main.appendChild(chipRow(YON_NUM, lv, function (k) { lv = k; fresh(); }));
-    var info = el('div', 'nlnote'); main.appendChild(info);
+    document.body.classList.add('yonmode');
+    var head = el('div', 'yonhead'); main.appendChild(head);
+    var panel = el('div', 'yonpanel'); panel.hidden = true;
+    var kRow = chipRow(KIND_CHIPS, kind, function (k) { kind = k; drawHead(); fresh(); });
+    var nRow = chipRow(YON_NUM, lv, function (k) { lv = k; drawHead(); fresh(); });
+    panel.appendChild(el('div', '', say('文章題を読んで、<b>4ます</b>をうめよう。<br>① 2つの量を上と下に　② 文に出てくる数　③ 1と□。<br>1 から「何倍？」の矢印をかくと、もう1つの段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。')));
+    panel.appendChild(kRow); panel.appendChild(nRow);
+    main.appendChild(panel);
     var card = el('div', 'card'); main.appendChild(card);
+    function name(list, k) { for (var i = 0; i < list.length; i++) if (list[i].k === k) return list[i].h; return ''; }
+    function drawHead() {
+      head.innerHTML = '<span class="yh-hk">' + hakase(34) + '</span><span class="yh-t"><b>4ます</b>　量を上下に → わかる数 → 1と□ → 矢印 → 式</span>' +
+        '<button class="yh-set" aria-expanded="' + !panel.hidden + '">⚙ ' + name(KIND_CHIPS, kind) + '・' + name(YON_NUM, lv) + (panel.hidden ? ' ▾' : ' ▴') + '</button>';
+    }
+    head.onclick = function (e) { if (!e.target.closest('.yh-set')) return; panel.hidden = !panel.hidden; drawHead(); };
+    drawHead();
     function fresh() {
       var P = lv === 'h' ? GEN.single(pickCtx(['haya']), pickKind(kind), Math.random() < 0.6 ? 1 : 2) : GEN.single(pickCtx(null), pickKind(kind), +lv);
-      info.textContent = 'ミスなしで続けて ' + (REC.d.streak.yon || 0) + ' 回';
       new YonRunner(card, P, {
-        onDone: function (ok) {
+        onDone: function (ok, R) {
           REC.add('yon_' + P.kind, ok); var n = REC.streak('yon', ok);
-          info.textContent = 'ミスなしで続けて ' + n + ' 回' + (n >= 5 ? '　すごい！' : '');
-          nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); });
+          if (ok) R.eEnd.insertBefore(el('div', 'nlnote', 'ミスなしで続けて ' + n + ' 回' + (n >= 5 ? '　すごい！' : '')), R.eEnd.firstChild);
+          nextBtn(R.eEnd, 'つぎの問題 ▶', function () { fresh(); });
         }
       });
     }
