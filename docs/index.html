@@ -1799,19 +1799,57 @@ var NL = (function () {
   }
 
   /* =====================================================
-     4ます（十字に区切った4つのますに数を置き、1の列から「何倍？」で式を立てる）
-     上の段＝比べる量、下の段＝「〜あたり」の〜。左下はいつも 1。
-       ア（1あたり） | イ（全体）
-       ---------------+-----------
-       1              | ウ（いくつ分）
-     どの型も「ア × ウ ＝ イ」のかけ算の式になる。
+     4ます（十字に区切った4つのますに数を置き、1から「何倍？」で式を立てる）
+     置き方は自由（2026-11-23 カワイさん）：
+       ・2つの量は、どちらを上の段にしてもよい
+       ・数は「組になる数が同じたての列」にそろっていれば、左右どちらでもよい
+         組＝｛1あたり・1｝と｛全体・いくつ分｝
+     入れる順：① 2つの量を上下に → ② 文に出てくる数 → ③ 1と□
+     どの置き方でも「1あたり × いくつ分 ＝ 全体」のかけ算の式になる。
      ===================================================== */
   var YON = {
-    exp: { tL: 'u', tR: 'a', bL: 'one', bR: 'b' },
-    lab: function (P) { return '×' + (P.kind === 'count' ? '□' : F(P.b)); },
-    // かけ算の式（3つの数のならび）
-    kake: function (P) { return ['u', 'b', 'a']; }
+    SL: ['tL', 'tR', 'bL', 'bR'],
+    grp: { u: 'A', one: 'A', a: 'B', b: 'B' },        // 同じ列に入る組
+    isT: function (k) { return k === 'u' || k === 'a'; }, // 比べる量の数か
+    lab: function (P) { return '×' + (P.kind === 'count' ? '□' : F(P.b)); }
   };
+  // 段：flip＝比べる量が下の段。列：aLeft＝1あたりの組が左の列
+  function yonLayout(flip, aLeft) {
+    var tr = flip ? 'b' : 't', br = flip ? 't' : 'b', cA = aLeft ? 'L' : 'R', cB = aLeft ? 'R' : 'L';
+    var m = {}; m[tr + cA] = 'u'; m[tr + cB] = 'a'; m[br + cA] = 'one'; m[br + cB] = 'b';
+    return m;
+  }
+  // ある数を置いた場所が正しいか（ほかの数とのならびで決まる）
+  function yonCheck(S, keys) {
+    var bad = {}, colOf = {};
+    keys.forEach(function (k) {
+      var sid = null; YON.SL.forEach(function (s) { if (S.slot[s] === k) sid = s; });
+      if (!sid) return;
+      var inT = (sid[0] === 't') !== !!S.flip;           // その段は比べる量の段か
+      if (YON.isT(k) !== inT && k !== 'one' || (k === 'one' && inT)) { bad[sid] = 'row'; return; }
+      colOf[k] = sid[1];
+    });
+    // 列：同じ組は同じ列、ちがう組はちがう列
+    var ks = Object.keys(colOf);
+    for (var i = 0; i < ks.length; i++) for (var j = i + 1; j < ks.length; j++) {
+      var p = ks[i], q = ks[j], same = YON.grp[p] === YON.grp[q];
+      if ((colOf[p] === colOf[q]) !== same) {
+        var sq = null; YON.SL.forEach(function (s) { if (S.slot[s] === q) sq = s; });
+        if (!bad[sq]) bad[sq] = same ? 'pair' : 'apart';
+      }
+    }
+    return bad;
+  }
+  // いま置いてある数に合う、正しい置き方（ヒント・自動で置くとき）
+  function yonGuess(S) {
+    var aLeft = true;
+    for (var i = 0; i < YON.SL.length; i++) {
+      var s = YON.SL[i], k = S.slot[s]; if (!k) continue;
+      if (yonCheck(S, [k])[s]) continue;
+      aLeft = (YON.grp[k] === 'A') === (s[1] === 'L'); break;
+    }
+    return yonLayout(!!S.flip, aLeft);
+  }
   function yonDraw(S, W) {
     var P = S.P, c = P.ctx, narrow = W < 520;
     var labW = narrow ? 92 : 128, gw = Math.min(W - labW - 24, 440);
@@ -1820,22 +1858,26 @@ var NL = (function () {
     var rowH = narrow ? 82 : 88, yA = 74, yTop = yA + rowH / 2, yMid = yA + rowH, yBot = yA + rowH * 1.5, yB = yA + rowH * 2, H = yB + 74;
     var fs = narrow ? 20 : 23, fsL = narrow ? 15 : 17;
     var show = S.mode === 'show', id = 'yon' + Math.floor(Math.random() * 1e9);
+    var slot = S.slot, lab0 = S.lab;
     var o = ['<svg class="nl yon" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="4ますの表">'];
     o.push('<defs><marker id="' + id + 'h" markerWidth="12" markerHeight="12" refX="7" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" fill="var(--arrow)"/></marker>' +
       '<marker id="' + id + 'q" markerWidth="12" markerHeight="12" refX="7" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 z" fill="var(--sub)"/></marker></defs>');
-    // ますの色
-    o.push('<rect x="' + gx0 + '" y="' + yA + '" width="' + gw + '" height="' + rowH + '" fill="var(--top-soft)"/>');
-    o.push('<rect x="' + gx0 + '" y="' + yMid + '" width="' + gw + '" height="' + rowH + '" fill="var(--bot-soft)"/>');
-    o.push('<rect x="' + (gx0 + 5) + '" y="' + (yA + 5) + '" width="' + (cw - 10) + '" height="' + (rowH * 2 - 10) + '" rx="10" fill="none" stroke="var(--one-line)" stroke-width="2.5" stroke-dasharray="7 5"/>');
+    // 段の色（その段に入れた量の色）
+    var rowCol = function (wh) { var k = lab0[wh]; return k === 'T' ? ['var(--top)', 'var(--top-soft)'] : k === 'B' ? ['var(--bot)', 'var(--bot-soft)'] : ['var(--sub)', 'var(--card)']; };
+    o.push('<rect x="' + gx0 + '" y="' + yA + '" width="' + gw + '" height="' + rowH + '" fill="' + rowCol('top')[1] + '"/>');
+    o.push('<rect x="' + gx0 + '" y="' + yMid + '" width="' + gw + '" height="' + rowH + '" fill="' + rowCol('bot')[1] + '"/>');
+    // 1 の列に点線のわく
+    var oneCol = null; YON.SL.forEach(function (s) { if (slot[s] === 'one') oneCol = s[1]; });
+    if (oneCol) o.push('<rect x="' + ((oneCol === 'L' ? gx0 : xm) + 5) + '" y="' + (yA + 5) + '" width="' + (cw - 10) + '" height="' + (rowH * 2 - 10) + '" rx="10" fill="none" stroke="var(--one-line)" stroke-width="2.5" stroke-dasharray="7 5"/>');
     // 十字
     o.push('<line x1="' + (gx0 - 6) + '" y1="' + yMid + '" x2="' + (gx0 + gw + 6) + '" y2="' + yMid + '" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>');
     o.push('<line x1="' + xm + '" y1="' + (yA - 4) + '" x2="' + xm + '" y2="' + (yB + 4) + '" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>');
     // 段の名前
-    [['top', yTop, 'var(--top)', 'var(--top-soft)'], ['bot', yBot, 'var(--bot)', 'var(--bot-soft)']].forEach(function (r) {
-      var k = show ? (r[0] === 'top' ? 'T' : 'B') : S.lab[r[0]], q = k === 'T' ? c.top : k === 'B' ? c.bot : null, y = r[1];
+    [['top', yTop], ['bot', yBot]].forEach(function (r) {
+      var k = lab0[r[0]], q = k === 'T' ? c.top : k === 'B' ? c.bot : null, y = r[1], col = rowCol(r[0]);
       if (q) {
-        o.push('<g class="lab' + (S.phase === 'label' ? ' tap' : '') + (S.labWrong ? ' wrong' : '') + '" data-lab="' + r[0] + '"><rect x="' + ox + '" y="' + (y - 32) + '" width="' + labW + '" height="64" rx="12" fill="' + r[3] + '" stroke="' + r[2] + '" stroke-width="2"/>' +
-          '<text x="' + (ox + labW / 2) + '" y="' + (y - 5) + '" text-anchor="middle" font-size="' + yFit(q.n, labW - 10, fsL) + '" font-weight="700" fill="' + r[2] + '">' + esc(q.n) + '</text>' +
+        o.push('<g class="lab' + (S.phase === 'label' ? ' tap' : '') + '" data-lab="' + r[0] + '"><rect x="' + ox + '" y="' + (y - 32) + '" width="' + labW + '" height="64" rx="12" fill="' + col[1] + '" stroke="' + col[0] + '" stroke-width="2"/>' +
+          '<text x="' + (ox + labW / 2) + '" y="' + (y - 5) + '" text-anchor="middle" font-size="' + yFit(q.n, labW - 10, fsL) + '" font-weight="700" fill="' + col[0] + '">' + esc(q.n) + '</text>' +
           '<text x="' + (ox + labW / 2) + '" y="' + (y + 19) + '" text-anchor="middle" font-size="' + (fsL - 1) + '" fill="var(--sub)">（' + esc(q.u) + '）</text></g>');
       } else {
         o.push('<g class="lab tap empty' + (S.labTarget === r[0] ? ' hint' : '') + '" data-lab="' + r[0] + '"><rect x="' + ox + '" y="' + (y - 32) + '" width="' + labW + '" height="64" rx="12" fill="var(--card)" stroke="var(--sub)" stroke-width="2" stroke-dasharray="6 5"/>' +
@@ -1843,36 +1885,40 @@ var NL = (function () {
       }
     });
     // 4つのます
-    [['tL', xL, yTop, 'var(--top)'], ['tR', xR, yTop, 'var(--top)'], ['bL', xL, yBot, 'var(--bot)'], ['bR', xR, yBot, 'var(--bot)']].forEach(function (m) {
-      var sid = m[0], x = m[1], y = m[2], k = show ? YON.exp[sid] : S.slot[sid];
+    var pos = { tL: [xL, yTop], tR: [xR, yTop], bL: [xL, yBot], bR: [xR, yBot] };
+    YON.SL.forEach(function (sid) {
+      var x = pos[sid][0], y = pos[sid][1], k = slot[sid], col = rowCol(sid[0] === 't' ? 'top' : 'bot')[0];
       if (k) {
         var txt = NL.cardText(P, k), cls = 'val' + (show ? '' : ' tap') + (S.wrong && S.wrong[sid] ? ' wrong' : '');
         var g = '<g class="' + cls + '" data-filled="' + sid + '">';
         if (k === 'one') g += '<circle cx="' + x + '" cy="' + y + '" r="23" fill="var(--one)" stroke="var(--one-line)" stroke-width="2"/><text x="' + x + '" y="' + (y + fs * 0.36) + '" text-anchor="middle" font-size="' + fs + '" font-weight="700" fill="#2a2310">1</text>';
-        else if (txt === '□') g += '<rect x="' + (x - 23) + '" y="' + (y - 23) + '" width="46" height="46" rx="4" fill="var(--card)" stroke="' + m[3] + '" stroke-width="3.5"/>';
-        else { var w = Math.min(cw - 10, Math.max(52, yTw(txt, fs) + 24)); g += '<rect x="' + (x - w / 2) + '" y="' + (y - 23) + '" width="' + w + '" height="46" rx="23" fill="var(--card)" stroke="' + m[3] + '" stroke-width="2.5"/><text x="' + x + '" y="' + (y + fs * 0.36) + '" text-anchor="middle" font-size="' + yFit(txt, w - 12, fs) + '" font-weight="700" fill="var(--ink)">' + esc(txt) + '</text>'; }
+        else if (txt === '□') g += '<rect x="' + (x - 23) + '" y="' + (y - 23) + '" width="46" height="46" rx="4" fill="var(--card)" stroke="' + col + '" stroke-width="3.5"/>';
+        else { var w = Math.min(cw - 10, Math.max(52, yTw(txt, fs) + 24)); g += '<rect x="' + (x - w / 2) + '" y="' + (y - 23) + '" width="' + w + '" height="46" rx="23" fill="var(--card)" stroke="' + col + '" stroke-width="2.5"/><text x="' + x + '" y="' + (y + fs * 0.36) + '" text-anchor="middle" font-size="' + yFit(txt, w - 12, fs) + '" font-weight="700" fill="var(--ink)">' + esc(txt) + '</text>'; }
         o.push(g + '</g>');
       } else {
-        var picked = S.selSlot === sid;
-        var cl = 'slot tap' + (S.sel ? ' ready' : '') + (S.hint && S.hint[sid] ? ' hint' : '') + (picked ? ' picked' : '');
+        var picked = S.selSlot === sid, live = S.phase === 'place1' || S.phase === 'place2';
+        var cl = 'slot' + (live ? ' tap' : '') + (S.sel ? ' ready' : '') + (S.hint && S.hint[sid] ? ' hint' : '') + (picked ? ' picked' : '');
         o.push('<g class="' + cl + '" data-slot="' + sid + '"><rect x="' + (x - 36) + '" y="' + (y - 24) + '" width="72" height="48" rx="12" fill="var(--card)" stroke="var(--sub)" stroke-width="2.5" stroke-dasharray="7 5"/>' +
           (picked ? '<text x="' + x + '" y="' + (y + 7) + '" text-anchor="middle" font-size="17" font-weight="700" fill="var(--teal)">ここ</text>' : '') +
           '<rect x="' + (x - cw / 2 + 4) + '" y="' + (y - rowH / 2 + 4) + '" width="' + (cw - 8) + '" height="' + (rowH - 8) + '" fill="transparent"/></g>');
       }
     });
-    // 矢印（下の段が先、上の段があと）
-    var lab = YON.lab(P);
-    function arw(top, label, done, cls) {
-      var y0 = top ? yA - 6 : yB + 6, cy = top ? yA - 66 : yB + 66, ly = top ? yA - 36 : yB + 36;
-      var col = done ? 'var(--arrow)' : 'var(--sub)', w = Math.max(64, yTw(label, fs) + 26);
-      return '<g class="arw ' + cls + '"><path d="M' + (xL + 8) + ' ' + y0 + ' Q' + xm + ' ' + cy + ' ' + (xR - 8) + ' ' + y0 + '" fill="none" stroke="' + col + '" stroke-width="3.5"' + (done ? '' : ' stroke-dasharray="8 6"') + ' marker-end="url(#' + id + (done ? 'h' : 'q') + ')"/>' +
-        '<rect x="' + (xm - w / 2) + '" y="' + (ly - 19) + '" width="' + w + '" height="38" rx="19" fill="' + (done ? 'var(--arrow)' : 'var(--card)') + '" stroke="' + col + '" stroke-width="2.5"/>' +
-        '<text x="' + xm + '" y="' + (ly + 7) + '" text-anchor="middle" font-size="' + (fs - 1) + '" font-weight="700" fill="' + (done ? '#fff' : 'var(--sub)') + '">' + esc(label) + '</text></g>';
-    }
+    // 矢印：1のある段が先、もう1つの段があと。向きは 1の列 → となりの列
     var A = show ? 3 : S.arrow;
-    if (A >= 1) o.push(arw(false, A >= 2 ? lab : '？', A >= 2, 'a1'));
-    if (A >= 3) o.push(arw(true, lab, true, 'a2 grow'));
-    else if (A === 2.5) o.push(arw(true, '？', false, 'a2'));
+    if (A && oneCol) {
+      var oneRow = slot.tL === 'one' || slot.tR === 'one' ? 'top' : 'bot', x1 = oneCol === 'L' ? xL : xR, x2 = oneCol === 'L' ? xR : xL;
+      var lab = YON.lab(P);
+      var arw = function (top, label, done, cls) {
+        var y0 = top ? yA - 6 : yB + 6, cy = top ? yA - 66 : yB + 66, ly = top ? yA - 36 : yB + 36, d = x2 > x1 ? 8 : -8;
+        var colr = done ? 'var(--arrow)' : 'var(--sub)', w = Math.max(64, yTw(label, fs) + 26);
+        return '<g class="arw ' + cls + '"><path d="M' + (x1 + d) + ' ' + y0 + ' Q' + xm + ' ' + cy + ' ' + (x2 - d) + ' ' + y0 + '" fill="none" stroke="' + colr + '" stroke-width="3.5"' + (done ? '' : ' stroke-dasharray="8 6"') + ' marker-end="url(#' + id + (done ? 'h' : 'q') + ')"/>' +
+          '<rect x="' + (xm - w / 2) + '" y="' + (ly - 19) + '" width="' + w + '" height="38" rx="19" fill="' + (done ? 'var(--arrow)' : 'var(--card)') + '" stroke="' + colr + '" stroke-width="2.5"/>' +
+          '<text x="' + xm + '" y="' + (ly + 7) + '" text-anchor="middle" font-size="' + (fs - 1) + '" font-weight="700" fill="' + (done ? '#fff' : 'var(--sub)') + '">' + esc(label) + '</text></g>';
+      };
+      o.push(arw(oneRow === 'top', A >= 2 ? lab : '？', A >= 2, 'a1'));
+      if (A >= 3) o.push(arw(oneRow !== 'top', lab, true, 'a2 grow'));
+      else if (A === 2.5) o.push(arw(oneRow !== 'top', '？', false, 'a2'));
+    }
     o.push('</svg>');
     return o.join('');
   }
@@ -1889,11 +1935,11 @@ var NL = (function () {
   function YonRunner(host, P, cfg) {
     var R = this; window.__R = R;
     R.alive = claim(host); R.tok = 0; R.P = P; R.cfg = cfg; R.miss = 0; R.firstTry = true; R.read = {};
-    var steps = ['read', 'ylab', 'yplace', 'yarrow', 'ywhy', 'ykake'];
+    var steps = ['read', 'ylab', 'yplace1', 'yplace2', 'yarrow', 'ywhy', 'ykake'];
     if (P.kind !== 'total') steps.push('yexpr');
     steps.push('ans');
     R.steps = steps; R.si = 0;
-    R.S = { P: P, lab: { top: null, bot: null }, slot: { tL: null, tR: null, bL: null, bR: null }, arrow: 0, wrong: {}, hint: {}, sel: null };
+    R.S = { P: P, flip: false, lab: { top: null, bot: null }, slot: { tL: null, tR: null, bL: null, bR: null }, arrow: 0, wrong: {}, hint: {}, sel: null };
     host.innerHTML = '';
     R.eText = el('div', 'prob'); host.appendChild(R.eText);
     R.eSteps = el('div', 'steps'); host.appendChild(R.eSteps);
@@ -1906,8 +1952,14 @@ var NL = (function () {
     R.eText.addEventListener('click', function (e) { var t = e.target.closest('.tok.tap'); if (t) R.onTok(t); });
     R.go(0);
   }
-  ['later', 'fb', 'renderText', 'onTok', 'slip', 'next'].forEach(function (k) { YonRunner.prototype[k] = Runner.prototype[k]; });
+  ['later', 'fb', 'onTok', 'slip', 'next', 'flashArrow'].forEach(function (k) { YonRunner.prototype[k] = Runner.prototype[k]; });
   YonRunner.prototype.cur = function () { return this.steps[this.si]; };
+  // 文の数の色は、置いた段ではなく量でそめる（比べる量を下の段にしたときも同じ色）
+  YonRunner.prototype.renderText = function () {
+    var S = this.S, real = S.slot;
+    if (S.flip) S.slot = { tL: real.bL, tR: real.bR, bL: real.tL, bR: real.tR };
+    Runner.prototype.renderText.call(this); S.slot = real;
+  };
   YonRunner.prototype.drawNL = function () { yonMount(this.eNL, this.S); };
   YonRunner.prototype.go = function (i) {
     var R = this; R.si = i; R.miss = 0; R.tok++;
@@ -1921,7 +1973,7 @@ var NL = (function () {
   };
   YonRunner.prototype.renderSteps = function () {
     var R = this, cur = R.cur();
-    var name = { read: 'よむ', ylab: 'ますをうめる', yplace: 'ますをうめる', yarrow: '矢印', ywhy: '矢印', ykake: '式', yexpr: '式', ans: '答え' };
+    var name = { read: 'よむ', ylab: 'ますをうめる', yplace1: 'ますをうめる', yplace2: 'ますをうめる', yarrow: '矢印', ywhy: '矢印', ykake: '式', yexpr: '式', ans: '答え' };
     var groups = []; R.steps.forEach(function (s) { if (groups.indexOf(name[s]) < 0) groups.push(name[s]); });
     var curG = cur ? name[cur] : null, past = true;
     R.eSteps.innerHTML = groups.map(function (g, i) {
@@ -1931,12 +1983,12 @@ var NL = (function () {
     }).join('');
   };
 
-  /* ① 段の名前 */
+  /* ① 2つの量を上下に（どちらが上でもよい） */
   YonRunner.prototype.st_ylab = function () {
     var R = this, S = R.S, c = R.P.ctx;
     S.phase = 'label';
     var items = GEN.shuffle([{ k: 'T', q: c.top }, { k: 'B', q: c.bot }]);
-    R.eCtrl.innerHTML = '<div class="ask">① 上の段と下の段に名前をつけよう<span class="sm">下の段の左のますには、いつも「1」が入る。「' + esc(ichi(c.bot.u)) + 'あたり」の1になるのは、どちらの量かな？</span></div>' +
+    R.eCtrl.innerHTML = '<div class="ask">① 出てくる2つの量を、上の段と下の段に入れよう<span class="sm">どちらを上にしてもいいよ。名前をタップすると、上の段から入るよ</span></div>' +
       '<div class="tray">' + items.map(function (it) { return '<button class="cardb labc" data-labk="' + it.k + '">' + esc(it.q.n) + ' <span class="u">（' + esc(it.q.u) + '）</span></button>'; }).join('') + '</div>';
     function used() { [].forEach.call(R.eCtrl.querySelectorAll('[data-labk]'), function (b) { var k = b.getAttribute('data-labk'); b.classList.toggle('used', S.lab.top === k || S.lab.bot === k); }); }
     R.eCtrl.onclick = function (e) {
@@ -1944,50 +1996,50 @@ var NL = (function () {
       var where = S.labTarget || (!S.lab.top ? 'top' : 'bot');
       if (S.lab[where]) where = where === 'top' ? 'bot' : 'top';
       S.lab[where] = b.getAttribute('data-labk'); S.labTarget = null;
-      used(); R.drawNL(); R.fb('');
-      if (S.lab.top && S.lab.bot) R.later(function () { R.checkLab(); }, 250);
+      used(); R.drawNL();
+      if (S.lab.top && S.lab.bot) {
+        S.phase = ''; S.flip = S.lab.top === 'B'; R.drawNL();
+        R.fb('上の段は「' + esc((S.flip ? c.bot : c.top).n) + '」、下の段は「' + esc((S.flip ? c.top : c.bot).n) + '」。つぎは、文に出てくる数を入れよう。', 'ok');
+        R.later(function () { R.next(); }, 1100);
+      }
     };
     R.onLabTap = function (wh) {
-      if (S.lab[wh]) { S.lab[wh] = null; S.labWrong = false; } else S.labTarget = S.labTarget === wh ? null : wh;
+      if (S.phase !== 'label') return;
+      if (S.lab[wh]) S.lab[wh] = null; else S.labTarget = S.labTarget === wh ? null : wh;
       used(); R.drawNL();
     };
   };
-  YonRunner.prototype.checkLab = function () {
-    var R = this, S = R.S, c = R.P.ctx;
-    if (S.phase !== 'label' || !S.lab.top || !S.lab.bot) return;
-    if (S.lab.top === 'T') {
-      S.phase = ''; S.labWrong = false; R.drawNL();
-      R.fb('上の段は「' + esc(c.top.n) + '」、下の段は「' + esc(c.bot.n) + '」。<b>' + esc(ichi(c.bot.u)) + 'あたり</b>の1は、下の段に入るよ。', 'ok');
-      return R.later(function () { R.next(); }, 1200);
-    }
-    R.slip(); S.labWrong = true; R.drawNL();
-    if (R.miss >= 2) {
-      S.lab = { top: 'T', bot: 'B' }; S.labWrong = false; S.phase = ''; R.drawNL();
-      R.fb('こうなるよ。「' + esc(ichi(c.bot.u)) + 'あたり」と言うから、<b>' + esc(c.bot.n) + '</b>が「1」の入る下の段。', 'ng');
-      return R.later(function () { R.next(); }, 2000);
-    }
-    R.fb('「' + esc(ichi(c.bot.u)) + 'あたり」の1は <b>' + esc(c.bot.n) + '</b> の1。だから <b>' + esc(c.bot.n) + '</b> が下の段だよ。名前をタップするともどせる。', 'ng');
-  };
 
-  /* ② 4つのますに数を置く */
-  YonRunner.prototype.st_yplace = function () {
+  /* ② 文に出てくる数 → ③ 1と□ */
+  YonRunner.prototype.st_yplace1 = function () { this.placeStep('place1', this.P.given.slice(), '② 文に出てくる数を、ますに入れよう', 'その数の量の段に入れるよ。組になる数（' + this.pairHint() + '）は、同じたての列に'); };
+  YonRunner.prototype.st_yplace2 = function () {
+    var c = this.P.ctx;
+    this.placeStep('place2', ['one', unkKey(this.P)], '③ 「1」と「□」を入れよう', '「' + esc(ichi(c.bot.u)) + 'あたり」の1は ' + esc(c.bot.n) + 'の段。□ は聞かれている数');
+  };
+  YonRunner.prototype.pairHint = function () {
+    var P = this.P, c = P.ctx;
+    if (P.kind === 'per') return F(P.b) + c.bot.u + 'で' + F(P.a) + c.top.u;
+    if (P.kind === 'total') return F(P.u) + c.top.u + 'は1' + c.bot.u + 'あたり。' + F(P.b) + c.bot.u + 'とは組にならない';
+    return '同じ段の2つは、べつべつの列';
+  };
+  YonRunner.prototype.placeStep = function (ph, cards, ask, sub) {
     var R = this, S = R.S;
-    S.phase = 'place'; S.sel = null; S.selSlot = null; S.wrong = {}; S.hint = {};
-    R.eCtrl.innerHTML = '<div class="ask">② 4つのますに数を置こう<span class="sm">カードをタップ → ますをタップ（置いた数をもう一度タップでもどせる）</span></div><div class="tray"></div>';
-    R.drawTray();
+    S.phase = ph; S.cards = cards; S.sel = null; S.selSlot = null; S.wrong = {}; S.hint = {};
+    R.eCtrl.innerHTML = '<div class="ask">' + ask + '<span class="sm">' + sub + '。カードをタップ → ますをタップ（置いた数をタップでもどせる）</span></div><div class="tray"></div>';
+    R.drawTray(); R.drawNL();
     R.eCtrl.onclick = function (e) {
-      var b = e.target.closest('[data-card]'); if (!b || b.classList.contains('used') || S.phase !== 'place') return;
+      var b = e.target.closest('[data-card]'); if (!b || b.classList.contains('used') || S.phase !== ph) return;
       var k = b.getAttribute('data-card');
       if (S.selSlot) { var to = S.selSlot; S.selSlot = null; return R.put(to, k); }
       S.sel = S.sel === k ? null : k; R.drawTray(); R.drawNL();
-      R.fb(S.sel ? '<b>' + esc(NL.cardText(R.P, k)) + '</b> をえらんだよ。置きたいますをタップしよう。' : '', 'info');
+      R.fb(S.sel ? '<b>' + esc(NL.cardText(R.P, k)) + '</b> をえらんだよ。入れたいますをタップしよう。' : '', 'info');
     };
   };
   YonRunner.prototype.drawTray = function () {
-    var R = this, S = R.S, P = R.P, tray = $('.tray', R.eCtrl); if (!tray) return;
-    var used = {}; ['tL', 'tR', 'bL', 'bR'].forEach(function (s) { if (S.slot[s]) used[S.slot[s]] = 1; });
+    var R = this, S = R.S, P = R.P, tray = $('.tray', R.eCtrl); if (!tray || !S.cards) return;
+    var used = {}; YON.SL.forEach(function (s) { if (S.slot[s]) used[S.slot[s]] = 1; });
     tray.classList.toggle('waiting', !!S.selSlot);
-    tray.innerHTML = P.given.concat(['one', unkKey(P)]).map(function (k) {
+    tray.innerHTML = S.cards.map(function (k) {
       var t = NL.cardText(P, k);
       return '<button class="cardb' + (k === 'one' ? ' one' : '') + (t === '□' ? ' q' : '') + (used[k] ? ' used' : '') + (S.sel === k ? ' sel' : '') + '" data-card="' + k + '">' + esc(t) + '</button>';
     }).join('');
@@ -1995,9 +2047,13 @@ var NL = (function () {
   YonRunner.prototype.onY = function (e) {
     var R = this, S = R.S;
     if (S.phase === 'label') { var lb = e.target.closest('[data-lab]'); if (lb && R.onLabTap) R.onLabTap(lb.getAttribute('data-lab')); return; }
-    if (S.phase !== 'place') return;
+    if (S.phase !== 'place1' && S.phase !== 'place2') return;
     var f = e.target.closest('[data-filled]');
-    if (f) { var sid = f.getAttribute('data-filled'); S.slot[sid] = null; delete S.wrong[sid]; R.drawTray(); R.drawNL(); R.renderText(); return; }
+    if (f) {
+      var sid = f.getAttribute('data-filled');
+      if (S.cards.indexOf(S.slot[sid]) < 0) return;   // 前の手順で入れた数は動かさない
+      S.slot[sid] = null; delete S.wrong[sid]; R.drawTray(); R.drawNL(); R.renderText(); return;
+    }
     var sl = e.target.closest('[data-slot]'); if (!sl) return;
     var id = sl.getAttribute('data-slot');
     if (S.sel) return R.put(id, S.sel);
@@ -2006,49 +2062,55 @@ var NL = (function () {
   };
   YonRunner.prototype.put = function (sid, k) {
     var R = this, S = R.S;
-    ['tL', 'tR', 'bL', 'bR'].forEach(function (s) { if (S.slot[s] === k) S.slot[s] = null; });
+    YON.SL.forEach(function (s) { if (S.slot[s] === k) S.slot[s] = null; });
     S.slot[sid] = k; S.sel = null; S.hint = {}; delete S.wrong[sid];
     R.drawTray(); R.drawNL(); R.renderText(); R.fb('');
     clearTimeout(R.chkT);
-    if (['tL', 'tR', 'bL', 'bR'].every(function (s) { return S.slot[s]; })) R.chkT = R.later(function () { R.checkPlace(); }, 280);
+    var all = S.cards.every(function (x) { return YON.SL.some(function (s) { return S.slot[s] === x; }); });
+    if (all) R.chkT = R.later(function () { R.checkPlace(); }, 280);
   };
   YonRunner.prototype.checkPlace = function () {
-    var R = this, S = R.S, P = R.P, c = P.ctx, exp = YON.exp;
-    if (S.phase !== 'place' || !['tL', 'tR', 'bL', 'bR'].every(function (s) { return S.slot[s]; })) return;
-    var wrong = ['tL', 'tR', 'bL', 'bR'].filter(function (s) { return S.slot[s] !== exp[s]; });
+    var R = this, S = R.S, P = R.P, c = P.ctx, ph = S.phase;
+    if (ph !== 'place1' && ph !== 'place2') return;
+    var placed = YON.SL.map(function (s) { return S.slot[s]; }).filter(Boolean);
+    var bad = yonCheck(S, placed);
+    // この手順で入れた数だけを「まちがい」にする
+    var wrong = Object.keys(bad).filter(function (s) { return S.cards.indexOf(S.slot[s]) >= 0; });
     if (!wrong.length) {
       S.phase = ''; S.wrong = {}; R.drawNL(); $('.tray', R.eCtrl).innerHTML = '';
-      R.fb('ぴったり！ 左の列は「1」と「' + esc(ichi(c.bot.u)) + 'あたり」の組、右の列は ' + (P.kind === 'count' ? '□' : F(P.b)) + c.bot.u + ' のときの組だね。', 'ok');
-      return R.later(function () { R.next(); }, 1300);
+      R.fb(ph === 'place1' ? 'いいね！ つぎは「1」と「□」を入れよう。' : 'ぴったり！ 1の列は「' + esc(ichi(c.bot.u)) + 'あたり」の組、となりの列は ' + (P.kind === 'count' ? '□' : F(P.b)) + esc(c.bot.u) + ' のときの組だね。', 'ok');
+      return R.later(function () { R.next(); }, ph === 'place1' ? 1000 : 1400);
     }
     R.slip(); S.wrong = {}; wrong.forEach(function (s) { S.wrong[s] = true; }); R.drawNL();
-    var w = wrong[0], k = S.slot[w], msg;
-    if (k === 'one') msg = '<b>1</b>は「' + esc(ichi(c.bot.u)) + 'あたり」の1。下の段の<b>左のます</b>に入れるよ。';
-    else if ((k === 'u' || k === 'a') !== (w[0] === 't')) { var q = (k === 'u' || k === 'a') ? c.top : c.bot; msg = '<b>' + esc(NL.cardText(P, k)) + '</b> は「' + esc(q.n) + '（' + esc(q.u) + '）」の数。<b>' + (q === c.top ? '上' : '下') + 'の段</b>に置こう。'; }
-    else msg = '同じたての列には、組になる数が入るよ。1の真上には「' + esc(c.perName) + '」、右の列には ' + (P.kind === 'count' ? '□' : F(P.b)) + esc(c.bot.u) + ' のときの' + esc(c.top.n) + '。';
+    var w = wrong[0], k = S.slot[w], why = bad[w], msg;
+    if (why === 'row') { var q = k === 'one' ? c.bot : (YON.isT(k) ? c.top : c.bot); msg = k === 'one' ? '<b>1</b>は「' + esc(ichi(c.bot.u)) + 'あたり」の1。<b>' + esc(c.bot.n) + '</b>の段に入れよう。' : '<b>' + esc(NL.cardText(P, k)) + '</b> は「' + esc(q.n) + '（' + esc(q.u) + '）」の数。<b>' + esc(q.n) + '</b>の段に入れよう。'; }
+    else if (why === 'pair') msg = YON.grp[k] === 'A' ? '「' + esc(ichi(c.bot.u)) + 'あたり」の組（1 と 1あたりの数）は、同じたての列に入れよう。' : '<b>' + esc(NL.cardText(P, k)) + '</b> は、となりの段の数と組になる数。同じたての列に入れよう。';
+    else msg = k === 'one' ? '<b>1</b>は、' + (P.kind === 'count' ? '□' : F(P.b)) + 'とはべつの列。となりの列に入れよう。' : '<b>' + esc(NL.cardText(P, k)) + '</b> は、もう1つの数とは組にならない。べつの列に入れよう。';
     if (R.miss >= 3) {
-      S.slot = { tL: exp.tL, tR: exp.tR, bL: exp.bL, bR: exp.bR }; S.wrong = {}; S.phase = '';
-      R.drawTray(); R.drawNL(); R.renderText();
-      R.fb('こう置くよ。黄色の列が「1あたり」の組。', 'ng');
+      var g = yonGuess(S); S.cards.forEach(function (x) { YON.SL.forEach(function (s) { if (S.slot[s] === x) S.slot[s] = null; }); });
+      YON.SL.forEach(function (s) { if (S.cards.indexOf(g[s]) >= 0) S.slot[s] = g[s]; });
+      S.wrong = {}; S.phase = ''; R.drawTray(); R.drawNL(); R.renderText();
+      R.fb('こう入れるよ。同じたての列が、組になる数だね。', 'ng');
       return R.later(function () { $('.tray', R.eCtrl) && ($('.tray', R.eCtrl).innerHTML = ''); R.next(); }, 1800);
     }
     R.fb(msg + '<br><span class="sub2">赤いところをタップするともどせるよ。</span>', 'ng');
     if (R.miss >= 2) R.later(function () {
-      if (S.phase !== 'place' || !Object.keys(S.wrong).length) return;
+      if (S.phase !== ph || !Object.keys(S.wrong).length) return;
       wrong.forEach(function (s) { S.slot[s] = null; });
-      S.wrong = {}; S.hint = {}; S.hint[wrong[0]] = true; S.sel = exp[wrong[0]];
+      var g = yonGuess(S), to = null; YON.SL.forEach(function (s) { if (!to && g[s] === k && !S.slot[s]) to = s; });
+      S.wrong = {}; S.hint = {}; if (to) { S.hint[to] = true; S.sel = k; }
       R.drawTray(); R.drawNL(); R.renderText();
       R.fb('光っているますに、えらんであるカードを置いてみよう。', 'info');
     }, 1300);
   };
 
-  /* ③ 下の段の矢印：1 → 右は何倍？ */
+  /* ④ 1のある段の矢印：1 → となりは何倍？ */
   YonRunner.prototype.st_yarrow = function () {
-    var R = this, S = R.S, P = R.P, lab = YON.lab(P);
+    var R = this, S = R.S, P = R.P, c = P.ctx, lab = YON.lab(P);
     var right = P.kind === 'count' ? '□' : F(P.b);
     S.arrow = 1; R.drawNL();
     var opts = GEN.shuffle(P.kind === 'count' ? ['×□', '÷□', '×' + F(P.u)] : ['×' + F(P.b), '÷' + F(P.b), '×' + F(P.kind === 'per' ? P.a : P.u)]);
-    R.eCtrl.innerHTML = '<div class="ask">③ 下の段の矢印に書く数は？<span class="sm"><b>1 → ' + esc(right) + '</b>。1を何倍すると ' + esc(right) + ' になる？</span></div>' +
+    R.eCtrl.innerHTML = '<div class="ask">④ 1のある段（' + esc(c.bot.n) + '）の矢印に書く数は？<span class="sm"><b>1 → ' + esc(right) + '</b>。1を何倍すると ' + esc(right) + ' になる？</span></div>' +
       '<div class="opts row">' + opts.map(function (o) { return '<button class="opt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>';
     R.eCtrl.onclick = function (e) {
       var b = e.target.closest('[data-o]'); if (!b || S.arrow !== 1) return;
@@ -2057,51 +2119,50 @@ var NL = (function () {
       R.slip(); b.classList.add('ng');
       R.fb(o.charAt(0) === '÷' ? '1 から ' + esc(right) + ' へ、大きくなる向きだよ。1 を ' + esc(right) + ' こ分にするのは <b>' + esc(lab) + '</b>。'
         : P.kind === 'count' ? 'わからない数は □ のまま。1 → □ は <b>×□</b>。'
-          : esc(o.slice(1)) + ' は上の段の数。下の段の 1 → ' + esc(right) + ' を見よう。', 'ng');
+          : esc(o.slice(1)) + ' は ' + esc(c.top.n) + 'の数。' + esc(c.bot.n) + 'の段の 1 → ' + esc(right) + ' を見よう。', 'ng');
     };
   };
-  /* ④ なぜ上の段にも同じ矢印がかける？（比例しているから） */
+  /* ⑤ なぜもう1つの段にも同じ矢印がかける？（比例しているから） */
   YonRunner.prototype.st_ywhy = function () {
     var R = this, S = R.S, P = R.P, lab = YON.lab(P), n = lab.slice(1), c = P.ctx;
     S.arrow = 2.5; R.drawNL();
-    var good = '下の段が ' + n + ' 倍になると、上の段も ' + n + ' 倍になる。' + c.bot.n + 'と' + c.top.n + 'は比例しているから';
-    var bad = GEN.shuffle(['上の段と下の段には、いつも同じ数が入るから', '右の列の数の方が、いつも大きいから', 'かけ算は、どこにかけても答えが同じになるから', '矢印は、上と下に1本ずつかくきまりだから']).slice(0, 2);
+    var good = c.bot.n + 'が ' + n + ' 倍になると、' + c.top.n + 'も ' + n + ' 倍になる。2つの量は比例しているから';
+    var bad = GEN.shuffle(['上の段と下の段には、いつも同じ数が入るから', 'となりの列の数の方が、いつも大きいから', 'かけ算は、どこにかけても答えが同じになるから', '矢印は、上と下に1本ずつかくきまりだから']).slice(0, 2);
     var rs = GEN.shuffle([[good, 1], [bad[0], 0], [bad[1], 0]]);
-    R.eCtrl.innerHTML = '<div class="ask">④ 上の段にも、同じ <b>' + esc(lab) + '</b> の矢印がかける。なぜ？</div><div class="opts">' +
+    R.eCtrl.innerHTML = '<div class="ask">⑤ ' + esc(c.top.n) + 'の段にも、同じ <b>' + esc(lab) + '</b> の矢印がかける。なぜ？</div><div class="opts">' +
       rs.map(function (r) { return '<button class="opt wide" data-w="' + r[1] + '">' + esc(r[0]) + '</button>'; }).join('') + '</div>';
     var done = false;
     R.eCtrl.onclick = function (e) {
       var w = e.target.closest('[data-w]'); if (!w || done) return;
       if (w.getAttribute('data-w') === '1') {
         done = true; w.classList.add('ok'); S.arrow = 3; R.drawNL();
-        R.fb('そのとおり。' + esc(c.bot.n) + 'が2倍・3倍…になると、' + esc(c.top.n) + 'も2倍・3倍…になる（<b>比例</b>）。だから上の段も <b>' + esc(lab) + '</b>。', 'ok');
+        R.fb('そのとおり。' + esc(c.bot.n) + 'が2倍・3倍…になると、' + esc(c.top.n) + 'も2倍・3倍…になる（<b>比例</b>）。だから ' + esc(c.top.n) + 'の段も <b>' + esc(lab) + '</b>。', 'ok');
         return R.later(function () { R.next(); }, 1700);
       }
       R.slip(); w.classList.add('ng');
       R.fb('ちがうよ。' + esc(ichi(c.bot.u)) + 'あたりが同じなら、' + esc(c.bot.n) + 'が2倍になると' + esc(c.top.n) + 'も2倍になるね。', 'ng');
     };
   };
-  /* ⑤ かけ算の式 */
+  /* ⑥ かけ算の式 */
   YonRunner.prototype.st_ykake = function () {
-    var R = this, P = R.P;
+    var R = this, P = R.P, c = P.ctx, lab = YON.lab(P);
     var list = GEN.shuffle([[['u', 'b', 'a'], 1], [['a', 'b', 'u'], 0], [['u', 'a', 'b'], 0]]);
-    R.eCtrl.innerHTML = '<div class="ask">⑤ 上の段の矢印を見て、かけ算の式をつくろう<span class="sm">左上 × 矢印の数 ＝ 右上</span></div><div class="opts">' +
-      list.map(function (x) { return '<button class="opt" data-e="' + x[1] + '"><span class="bigexpr" style="font-size:inherit;margin:0">' + yEq(P, x[0][0], x[0][1], x[0][2]) + '</span></button>'; }).join('') + '</div>';
+    R.eCtrl.innerHTML = '<div class="ask">⑥ ' + esc(c.top.n) + 'の段の矢印を見て、かけ算の式をつくろう<span class="sm">1の上（下）の数 × 矢印の数 ＝ となりの数</span></div><div class="opts">' +
+      list.map(function (x) { return '<button class="opt" data-e="' + x[1] + '"><span class="bigexpr">' + yEq(P, x[0][0], x[0][1], x[0][2]) + '</span></button>'; }).join('') + '</div>';
     fitOpts(R.eCtrl);
     var done = false;
     R.eCtrl.onclick = function (e) {
       var b = e.target.closest('[data-e]'); if (!b || done) return;
       if (b.getAttribute('data-e') === '1') { done = true; b.classList.add('ok'); R.fb('いい式！ ' + (P.kind === 'total' ? 'このまま計算すれば □ が出るね。' : 'つぎは、□ を求める式になおそう。'), 'ok'); return R.later(function () { R.next(); }, 900); }
       R.slip(); b.classList.add('ng'); R.flashArrow();
-      R.fb('上の段の矢印は、<b>左上</b>から<b>右上</b>へ ' + esc(YON.lab(P)) + '。だから「左上 × ' + esc(YON.lab(P).slice(1)) + ' ＝ 右上」。', 'ng');
+      R.fb(esc(c.top.n) + 'の段の矢印は、1の列の数 <b>' + yq(P, 'u') + '</b> から、となりの <b>' + yq(P, 'a') + '</b> へ ' + esc(lab) + '。だから「' + yq(P, 'u') + ' × ' + esc(lab.slice(1)) + ' ＝ ' + yq(P, 'a') + '」。', 'ng');
     };
   };
-  YonRunner.prototype.flashArrow = Runner.prototype.flashArrow;
-  /* ⑥ □を求める式（かけ算のぎゃく） */
+  /* ⑦ □を求める式（かけ算のぎゃく） */
   YonRunner.prototype.st_yexpr = function () {
     var R = this, P = R.P;
     var opts = GEN.shuffle(Runner.prototype.exprOptions.call(R));
-    R.eCtrl.innerHTML = '<div class="ask">⑥ □を求める式はどれ？<span class="sm">□ をふくむかけ算は、わり算で □ が出せる</span></div>' +
+    R.eCtrl.innerHTML = '<div class="ask">⑦ □を求める式はどれ？<span class="sm">□ をふくむかけ算は、わり算で □ が出せる</span></div>' +
       '<div class="bigexpr"><span class="sub2">4ますから：</span>' + yEq(P, 'u', 'b', 'a') + '</div>' +
       '<div class="opts">' + opts.map(function (o) { return '<button class="opt" data-e="' + o.join(',') + '">□ ＝ ' + exprText(P, P[o[0]], o[1], P[o[2]]) + '</button>'; }).join('') + '</div>';
     fitOpts(R.eCtrl);
@@ -2112,11 +2173,11 @@ var NL = (function () {
       if (Runner.prototype.isRightExpr.call(R, o[0], o[1], o[2])) { done = true; b.classList.add('ok'); R.fb('そのとおり！', 'ok'); return R.later(function () { R.next(); }, 700); }
       R.slip(); b.classList.add('ng');
       var known = P.kind === 'per' ? F(P.b) : F(P.u);
-      R.fb('□ × ' + known + ' ＝ ' + F(P.a) + ' のように、<b>' + F(P.a) + ' は ' + known + ' のいくつ分？</b> と考えよう。<b>' + F(P.a) + ' ÷ ' + known + '</b> で □ が出るよ。', 'ng');
+      R.fb('<b>' + F(P.a) + ' は ' + known + ' のいくつ分？</b> と考えよう。<b>' + F(P.a) + ' ÷ ' + known + '</b> で □ が出るよ。', 'ng');
     };
   };
   YonRunner.prototype.finish = function () {
-    var R = this, P = R.P, e = P.expr;
+    var R = this, P = R.P, e = P.expr, S = R.S;
     R.eCtrl.innerHTML = ''; R.eCtrl.onclick = null; KP.active = null;
     var note = el('div', 'note');
     note.innerHTML = '<h4>ノートにはこう書こう</h4><div class="nlbox yonbox"></div>' +
@@ -2124,7 +2185,7 @@ var NL = (function () {
       (P.kind !== 'total' ? '<div class="ln">□ ＝ ' + exprText(P, e.l, e.op, e.r) + ' ＝ ' + F(P.ans) + '</div>' : '<div class="ln">□ ＝ ' + F(P.ans) + '</div>') +
       '<div class="ln">答え　' + ansText(P, P.ans) + '</div>';
     R.eEnd.appendChild(note);
-    yonMount($('.yonbox', note), { P: P, mode: 'show' });
+    yonMount($('.yonbox', note), { P: P, mode: 'show', flip: S.flip, lab: { top: S.lab.top, bot: S.lab.bot }, slot: { tL: S.slot.tL, tR: S.slot.tR, bL: S.slot.bL, bR: S.slot.bR } });
     R.eNLwrap.style.display = 'none';
     if (R.cfg.onDone) R.cfg.onDone(R.firstTry, R);
   };
@@ -2291,7 +2352,7 @@ var NL = (function () {
   var YON_NUM = [{ k: '1', h: '整数' }, { k: '2', h: '小数も' }, { k: 'h', h: '速さ' }];
   VIEW.yon = function () {
     var kind = 'per', lv = '1';   // タブを開いたら、いつも左端から
-    main.appendChild(el('div', '', say('文章題を読んで、<b>4ます</b>に数を入れよう。下の段の左は、いつも <b>1</b>。<br>1 から右へ「何倍？」の矢印をかくと、上の段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。')));
+    main.appendChild(el('div', '', say('文章題を読んで、<b>4ます</b>をうめよう。<br>① 2つの量を上と下に　② 文に出てくる数　③ 1と□。<br>1 から「何倍？」の矢印をかくと、もう1つの段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。')));
     main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; fresh(); }));
     main.appendChild(chipRow(YON_NUM, lv, function (k) { lv = k; fresh(); }));
     var info = el('div', 'nlnote'); main.appendChild(info);
