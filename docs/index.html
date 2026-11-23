@@ -277,24 +277,31 @@ body.big .prob{font-size:26px}
 .yonhead .yh-t b{color:var(--navy2);font-size:17px}
 .yonhead .yh-set{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:700;font-size:15px;min-height:40px;color:var(--navy2)}
 .yonpanel{margin:0 0 8px}
+@media (max-width:560px){.yonhead .yh-l{display:none}}
 .yonpanel .chips{margin:0 0 8px}
-body.yonmode main{padding-top:10px}
-body.yonmode .card{padding:12px 16px}
-.yonr .prob{margin:0 0 2px;line-height:1.7}
-.yonr .steps{margin:4px 0 6px}
-.yonr .ctrl{margin-top:8px}
-@media (min-width:900px) and (min-aspect-ratio:1/1){.yonr .ctrl{margin-top:0}}
-.yonr .note{margin-top:8px}
-.yonr .note .ln{font-size:21px;margin:2px 6px}
-.yonr .next{margin-top:10px}
+body.fit main{padding-top:10px}
+body.fit .card{padding:12px 16px}
+.cols .prob{margin:0 0 2px;line-height:1.7}
+.cols .steps{margin:4px 0 6px}
+.cols .ctrl{margin-top:8px}
+.cols .note{margin-top:8px}
+.cols .note .ln{font-size:21px;margin:2px 6px}
+.cols .next{margin-top:10px}
+.cols.flat .yr .ctrl{margin-top:0}
+/* 2だんかいの①が終わったら、式だけの1行に */
+.cols.flat .yl{display:none}
 @media (min-width:900px) and (min-aspect-ratio:1/1){
-  body.yonmode main{max-width:1280px}
-  body.yonmode .bar-in,body.yonmode .tabs{max-width:1280px}
-  .yonr{display:flex;gap:20px;align-items:flex-start}
-  .yonr .yl{flex:1.15 1 0;min-width:0}
-  .yonr .yr{flex:1 1 0;min-width:0;padding-top:4px}
-  .yonr .yr .opts:has(.opt.wide){grid-template-columns:1fr}
-  .yonr .yr .opt.wide{min-height:64px}
+  body.fit main{max-width:1280px}
+  body.fit .bar-in,body.fit .tabs{max-width:1280px}
+  body.fit .cols{display:flex;gap:20px;align-items:flex-start}
+  body.fit .cols .cols,body.fit .cols.flat{display:block}
+  body.fit .cols .yl{flex:1.15 1 0;min-width:0}
+  body.fit .cols .yr{flex:1 1 0;min-width:0;padding-top:4px}
+  body.fit .cols .ctrl{margin-top:0}
+  body.fit .cols .yr .opts:has(.opt.wide){grid-template-columns:1fr}
+  body.fit .cols .yr .opt.wide{min-height:52px;padding:8px 14px}
+  body.fit .cols .yr .s2 .ask,body.fit .cols .yr .r2 .ask{margin-top:6px!important;margin-bottom:6px}
+  body.fit .cmpw .ctab th,body.fit .cmpw .ctab td{padding:4px 14px}
 }
 
 /* ---------- トップ画面 ---------- */
@@ -1115,17 +1122,22 @@ var NL = (function () {
     R.read = {};
     R.si = 0;
 
-    host.innerHTML = '';
-    if (cfg.banner) host.appendChild(el('div', 'ask', cfg.banner));
-    R.eText = el('div', 'prob'); if (!cfg.hideText) host.appendChild(R.eText);
-    R.eSteps = el('div', 'steps'); host.appendChild(R.eSteps);
-    R.eNLwrap = el('div'); host.appendChild(R.eNLwrap);
+    // 横長の画面では左右2列（左＝文・手順・図／右＝操作・返事・おわり）。cfg.cols で置き場を外から渡せる
+    var L, Rt;
+    var Hd;   // 名前・文・手順の置き場（ふつうは左の列。cfg.cols.H があればそこ）
+    if (cfg.cols) { L = cfg.cols.L; Rt = cfg.cols.R; Hd = cfg.cols.H || L; L.innerHTML = ''; Rt.innerHTML = ''; Hd.innerHTML = ''; }
+    else { host.innerHTML = ''; var wrap = el('div', 'cols'); L = el('div', 'yl'); Rt = el('div', 'yr'); wrap.appendChild(L); wrap.appendChild(Rt); host.appendChild(wrap); }
+    R.eL = L; R.eR = Rt; Hd = Hd || L;
+    if (cfg.banner) Hd.appendChild(el('div', 'ask', cfg.banner));
+    R.eText = el('div', 'prob'); if (!cfg.hideText) Hd.appendChild(R.eText);
+    R.eSteps = el('div', 'steps'); Hd.appendChild(R.eSteps);
+    R.eNLwrap = el('div'); L.appendChild(R.eNLwrap);
     R.eNL = el('div', 'nlbox'); R.eNLwrap.appendChild(R.eNL);
     R.eNote = el('div', 'nlnote'); R.eNLwrap.appendChild(R.eNote);
     if (cfg.noDiagram) { R.eNLwrap.style.display = 'none'; }
-    R.eCtrl = el('div', 'ctrl'); host.appendChild(R.eCtrl);
-    R.eFb = el('div', 'fb'); host.appendChild(R.eFb);
-    R.eEnd = el('div'); host.appendChild(R.eEnd);
+    R.eCtrl = el('div', 'ctrl'); Rt.appendChild(R.eCtrl);
+    R.eFb = el('div', 'fb'); Rt.appendChild(R.eFb);
+    R.eEnd = el('div'); Rt.appendChild(R.eEnd);
 
     R.eNL.addEventListener('click', function (e) { R.onNL(e); });
     R.eText.addEventListener('click', function (e) { var t = e.target.closest('.tok.tap'); if (t) R.onTok(t); });
@@ -1554,14 +1566,44 @@ var NL = (function () {
       if (P.kind === 'count') lines += '<div class="ln">' + F(P.u) + ' × □ ＝ ' + F(P.a) + '</div>';
       lines += '<div class="ln">□ ＝ ' + exprText(P, e.l, e.op, e.r) + (hasAns ? ' ＝ ' + F(P.ans) : '') + '</div>';
       if (hasAns) lines += '<div class="ln">答え　' + ansText(P, P.ans) + '</div>';
-      note.innerHTML = '<h4>ノートにはこう書こう</h4><div class="nlbox"></div>' + lines;
+      var two = !cfg.noDiagram && R.eR.offsetTop === R.eL.offsetTop && R.eR.offsetLeft > R.eL.offsetLeft;  // 左右2列で出ているか
+      note.innerHTML = '<h4>ノートにはこう書こう' + (two ? '（左の図も）' : '') + '</h4>' + (two ? '' : '<div class="nlbox"></div>') + lines;
       R.eEnd.appendChild(note);
       var S2 = { P: P, mode: 'show', final: true, flip: R.S.flip, lab: R.S.flip ? { top: 'B', bot: 'T' } : { top: 'T', bot: 'B' }, arrow: 3, prop: true, slot: {} };
-      mountNL($('.nlbox', note), S2);
-      if (!cfg.noDiagram) R.eNLwrap.style.display = 'none';
+      if (two) { R.eNLwrap.style.opacity = ''; mountNL(R.eNL, S2); }
+      else { mountNL($('.nlbox', note), S2); if (!cfg.noDiagram) R.eNLwrap.style.display = 'none'; }
     }
     if (cfg.onDone) cfg.onDone(R.firstTry, R);
   };
+
+  /* ---------- 図を画面の高さに合わせて縮める（全画面で1画面に収める・2026-11-23） ----------
+     画面の作りが変わるたびに、図のある列（2列なら左の列、1列ならカード全体）が画面の下をこえていないかを見て、
+     こえた分だけ図を縮める。小さくしすぎないよう、もとの高さの6割（180px）より下にはしない。 */
+  function colOf(svg) {
+    var c = svg.closest('.yl');
+    if (c && c.parentNode && getComputedStyle(c.parentNode).display === 'flex') return c;
+    return svg.closest('.card') || $('#main');
+  }
+  function bottomOf(box) {
+    var m = 0;
+    [].forEach.call(box.querySelectorAll('*'), function (e) { if (!e.getClientRects().length || e.closest('svg') && e.tagName.toLowerCase() !== 'svg') return; var r = e.getBoundingClientRect(); if (r.height > 0) m = Math.max(m, r.bottom + window.scrollY); });
+    return m;
+  }
+  function fitDiagrams() {
+    if (!document.body.classList.contains('fit') || window.innerWidth < 700) return;   // スマホはスクロールで見るので縮めない
+    [].forEach.call($('#main').querySelectorAll('.nlbox > svg.nl'), function (svg) {
+      if (!svg.getClientRects().length || svg.closest('.note')) return;
+      var h = svg.getBoundingClientRect().height, nat = +svg.getAttribute('height') || h;
+      var over = bottomOf(colOf(svg)) - window.innerHeight + 30;
+      if (over <= 1) return;
+      var nh = Math.max(Math.min(160, nat), Math.round(nat * (svg.closest('.cmpw') ? 0.5 : 0.55)), Math.floor(h - over));
+      if (nh < h - 1) { svg.style.maxHeight = nh + 'px'; svg.style.width = 'auto'; }
+    });
+  }
+  var fitQ = false;
+  function fitSoon() { if (fitQ) return; fitQ = true; requestAnimationFrame(function () { fitQ = false; fitDiagrams(); }); }
+  if (window.MutationObserver) new MutationObserver(fitSoon).observe($('#main'), { childList: true, subtree: true });
+  window.addEventListener('resize', fitSoon);
 
   /* ---------- 「つぎへ」ボタン ---------- */
   // 選択肢の字がボタンからはみ出すときは、1列（はばは文字に合わせる）にする
@@ -1612,39 +1654,44 @@ var NL = (function () {
   function CompareRunner(host, C, cfg) {
     var c = C.ctx, alive = claim(host);
     host.innerHTML = '';
+    var two = cfg.mode !== 'quick', colL = host, colR = host;
+    function twoNow() { return two && colR.offsetLeft > colL.offsetLeft; }
+    if (two) { var wrap = el('div', 'cols cmpw'); colL = el('div', 'yl'); colR = el('div', 'yr'); wrap.appendChild(colL); wrap.appendChild(colR); host.appendChild(wrap); }
     var head = el('div');
-    host.appendChild(head);
+    colL.appendChild(head);
     C.showPer = cfg.mode !== 'quick';
     function drawHead() {
       head.innerHTML = '<div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + c.icon + '</span>' + C.n + 'つの' + esc(c.cmp.what) + 'を比べます。<span class="askline">' + esc(C.q) + '</span></div>' +
         cmpTable(C) + (cfg.mode !== 'quick' ? '<div class="nlnote">「' + esc(c.perName) + '」をそれぞれ求めて比べよう。' + (C.round ? '（四しゃ五入して整数）' : '') + '</div>' : '');
     }
     drawHead();
-    var body = el('div'); host.appendChild(body);
+    var body = el('div'); colR.appendChild(body);
     var allFirst = true, idx = 0;
     function doItem() {
       if (idx >= C.items.length) return judge();
       var it = C.items[idx];
       var steps = cfg.mode === 'full' && idx === 0 ? ['label', 'place', 'arrow', 'expr', 'ans'] : ['expr', 'ans'];
-      var box = el('div', 'card'); box.style.boxShadow = 'none'; box.style.border = '2px solid var(--line)';
-      body.appendChild(box);
-      new Runner(box, itemP(C, it), {
-        steps: steps, exprMode: 'pick', banner: '<b>' + esc(it.nm) + '</b> の' + esc(c.perName), noNote: true, hideText: false,
+      // 1つずつの置き場：左（名前・文・図）は表の下、右（操作）は右の列
+      var bL = el('div', 'cmpitem'), bH = el('div'), bR = el('div');
+      colL.appendChild(bL); body.appendChild(bH); body.appendChild(bR);
+      new Runner(bR, itemP(C, it), {
+        steps: steps, exprMode: 'pick', banner: '<b>' + esc(it.nm) + '</b> の' + esc(c.perName) + '<span class="sm">' + esc(it.nm) + '：' + F(c.cmp.swapCol ? it.a : it.b) + esc(c.cmp.swapCol ? c.top.u : c.bot.u) + '、' + F(c.cmp.swapCol ? it.b : it.a) + esc(c.cmp.swapCol ? c.bot.u : c.top.u) + '</span>', noNote: true, hideText: true, cols: { L: bL, R: bR, H: bH },
         onDone: function (ok) {
           if (!alive()) return;
           if (!ok) allFirst = false;
           it.done = true; drawHead();
-          box.querySelector('.nlbox') && (box.querySelector('.nlbox').parentNode.style.display = 'none');
-          idx++; later(function () { if (!alive()) return; box.style.display = 'none'; doItem(); scrollTo(head); }, 700);
+          bL.querySelector('.nlbox') && (bL.querySelector('.nlbox').parentNode.style.display = 'none');
+          idx++; later(function () { if (!alive()) return; bL.style.display = 'none'; bH.style.display = 'none'; bR.style.display = 'none'; doItem(); if (!twoNow()) scrollTo(head); }, 700);
         }
       });
-      scrollTo(box);
+      if (!twoNow()) scrollTo(bL);
     }
     function judge() {
-      var box = el('div'); body.appendChild(box);
+      var box = el('div'); (two ? colR : body).appendChild(box);
       var big = c.cmp.better === 'big';
       box.innerHTML = '<div class="ask">' + esc(C.q) + '</div><div class="opts row">' + C.items.map(function (it) { return '<button class="opt" data-nm="' + esc(it.nm) + '">' + esc(it.nm) + '</button>'; }).join('') + '</div><div class="r2"></div><div class="fb"></div>';
       var fbx = $('.fb', box), step = 1;
+      if (twoNow()) colL.appendChild(fbx);
       box.onclick = function (e) {
         var b = e.target.closest('[data-nm]');
         if (b && step === 1) {
@@ -1667,7 +1714,7 @@ var NL = (function () {
           } else { allFirst = false; r.classList.add('ng'); fbx.className = 'fb show ng'; fbx.innerHTML = (r.textContent.indexOf(c.top.n + 'が') === 0 ? '数だけでは決まらないよ。2つの量をそろえた「1あたり」で比べたね。' : '大きい・小さいを、もう一度表で見くらべよう。'); }
         }
       };
-      scrollTo(box);
+      if (!twoNow()) scrollTo(box);
     }
     if (cfg.mode === 'quick') judge(); else doItem();
   }
@@ -1677,10 +1724,10 @@ var NL = (function () {
     var alive = claim(host);
     var c = C.ctx, big = c.cmp.better === 'big';
     var sameQ = C.sameBot ? c.bot : c.top, diffQ = C.sameBot ? c.top : c.bot;
-    host.innerHTML = '<div class="prob"><span class="ic">' + c.icon + '</span>2つの' + esc(c.cmp.what) + 'を比べます。<span class="askline">' + esc(C.q) + '</span></div>' + cmpTable(C) +
-      '<div class="ask" style="margin-top:12px">① 同じになっている（そろっている）のは？</div><div class="opts">' +
+    host.innerHTML = '<div class="cols"><div class="yl"><div class="prob"><span class="ic">' + c.icon + '</span>2つの' + esc(c.cmp.what) + 'を比べます。<span class="askline">' + esc(C.q) + '</span></div>' + cmpTable(C) + '</div><div class="yr">' +
+      '<div class="ask">① 同じになっている（そろっている）のは？</div><div class="opts">' +
       GEN.shuffle([[c.bot, C.sameBot], [c.top, !C.sameBot]]).map(function (x) { return '<button class="opt wide" data-s="' + (x[1] ? 1 : 0) + '">' + esc(x[0].n) + 'がそろっている</button>'; }).join('') +
-      '</div><div class="s2"></div><div class="fb"></div>';
+      '</div><div class="s2"></div><div class="fb"></div></div></div>';
     var fbx = $('.fb', host), step = 1, first = true;
     // 勝つ方：下がそろう→上の数で。上がそろう→下の数で（下が少ない方が1あたりは大きい）
     var winBig = C.sameBot ? big : !big; // 違う方の量が「多い」方が勝ちか
@@ -1738,6 +1785,7 @@ var NL = (function () {
         b1.querySelector('.steps').style.display = 'none';
         b1.querySelector('.fb').style.display = 'none';
         b1.querySelector('.nlbox') && (b1.querySelector('.nlbox').parentNode.style.display = 'none');
+        var w1 = b1.querySelector('.cols'); if (w1) w1.classList.add('flat');
         later(function () {
           new Runner(b2, T.s2, {
             steps: st2, exprMode: cfg.quick ? 'pick' : 'build', hideText: true, flip: R.S.flip, noDiagram: cfg.quick,
@@ -1802,9 +1850,9 @@ var NL = (function () {
   }
   function ConvertRunner(host, Q, cfg) {
     window.__Q = Q; claim(host);
-    host.innerHTML = '<div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + (Q.time ? '⏱️' : '🔁') + '</span>' +
+    host.innerHTML = '<div class="cols"><div class="yl"><div class="prob">' + (cfg.qno ? '<span class="qno">' + cfg.qno + '</span>' : '') + '<span class="ic">' + (Q.time ? '⏱️' : '🔁') + '</span>' +
       Q.segs.map(function (s) { return s.n != null ? '<span class="tok">' + F(s.n) + '</span>' : esc(s.t); }).join('') + '</div>' +
-      (Q.time ? '' : ladder(Q.path)) + '<div class="vis" ' + (cfg.hideVis ? 'style="display:none"' : '') + '><div class="nlbox"></div><div class="nlnote"></div></div><div class="ctrl"><div class="kpw"></div></div><div class="fb"></div>';
+      (Q.time ? '' : ladder(Q.path)) + '<div class="vis" ' + (cfg.hideVis ? 'style="display:none"' : '') + '><div class="nlbox"></div><div class="nlnote"></div></div></div><div class="yr"><div class="ctrl"><div class="kpw"></div></div><div class="fb"></div></div></div>';
     var vis = $('.vis', host), box = $('.nlbox', host), fbx = $('.fb', host), miss = 0;
     if (Q.time) { box.innerHTML = timeRuler(Q, box.clientWidth); var whole = Q.toMin ? Math.floor(Q.d) : Q.h;
       $('.nlnote', host).textContent = '上が分、下が時間。60分 ＝ 1時間、6分 ＝ 0.1時間。' + (Q.toMin ? (whole >= 1 ? whole + '時間 ＝ ' + whole * 60 + '分。のこりの ' + F(fix(Q.d - whole)) + '時間を図で見よう。' : '') : whole + '時間と、のこりの' + Q.mm + '分を図で見よう。'); }
@@ -1980,7 +2028,7 @@ var NL = (function () {
     R.steps = steps; R.si = 0;
     R.S = { P: P, flip: false, lab: { top: null, bot: null }, slot: { tL: null, tR: null, bL: null, bR: null }, arrow: 0, wrong: {}, hint: {}, sel: null };
     host.innerHTML = '';
-    var wrap = el('div', 'yonr'), L = el('div', 'yl'), Rt = el('div', 'yr');
+    var wrap = el('div', 'yonr cols'), L = el('div', 'yl'), Rt = el('div', 'yr');
     wrap.appendChild(L); wrap.appendChild(Rt); host.appendChild(wrap);
     R.eL = L; R.eR = Rt;
     R.eText = el('div', 'prob'); L.appendChild(R.eText);
@@ -2251,7 +2299,7 @@ var NL = (function () {
     REC.ui('tab', id);
     $('#tabs').innerHTML = TABS.map(function (t) { return '<button class="tab' + (t.id === id ? ' on' : '') + '" data-tab="' + t.id + '"><span class="n">' + t.n + '</span>' + t.name + '</button>'; }).join('');
     KP.active = null;
-    document.body.classList.remove('yonmode');
+    document.body.classList.remove('fit');
     main.innerHTML = '';
     window.scrollTo(0, 0);
     VIEW[id]();
@@ -2274,27 +2322,53 @@ var NL = (function () {
 
   var VIEW = {};
 
+  /* ---------- 上の1行（博士・この画面ですること・⚙で問題の種類） ----------
+     全画面の中で、文・図・式・選ぶボタンが1画面に収まるように、説明と種類のボタンは⚙の中にしまう（2026-11-23 カワイさん） */
+  function plainName(h) { return String(h).replace(/<span class="lv">(\d)<\/span>/, 'レベル$1 ').replace(/<[^>]+>/g, ''); }
+  function fitHead(o) {
+    document.body.classList.add('fit');
+    var head = el('div', 'yonhead'); main.appendChild(head);
+    var panel = el('div', 'yonpanel'); panel.hidden = true;
+    var sayBox = el('div'); panel.appendChild(sayBox); sayBox.innerHTML = say(o.say);
+    var cur = o.rows.map(function (r) { return r.cur; });
+    o.rows.forEach(function (r, i) { panel.appendChild(chipRow(r.list, r.cur, function (k) { cur[i] = k; draw(); r.onPick(k); })); });
+    main.appendChild(panel);
+    function nm(list, k) { for (var i = 0; i < list.length; i++) if (list[i].k === k) return plainName(list[i].h); return ''; }
+    function draw() {
+      head.innerHTML = '<span class="yh-hk">' + hakase(34) + '</span><span class="yh-t"><b>' + o.title + '</b><span class="yh-l">　' + o.line + '</span></span>' +
+        '<button class="yh-set" aria-expanded="' + !panel.hidden + '">⚙ ' + o.rows.map(function (r, i) { return nm(r.list, cur[i]); }).join('・') + (panel.hidden ? ' ▾' : ' ▴') + '</button>';
+    }
+    head.onclick = function (e) { if (!e.target.closest('.yh-set')) return; panel.hidden = !panel.hidden; draw(); };
+    draw();
+    return { say: function (h) { sayBox.innerHTML = say(h); } };
+  }
+  // 「つぎへ」やひとことを置く場所：2列なら右の列の下、そうでなければカードの下
+  function endHost(card) {
+    var cs = [].filter.call(card.querySelectorAll('.cols:not(.flat)'), function (c) { return c.offsetParent !== null; });
+    return cs.length ? cs[cs.length - 1].lastElementChild : card;
+  }
+  function streakNote(host, n, ok) { if (ok) host.appendChild(el('div', 'nlnote', 'ミスなしで続けて ' + n + ' 回' + (n >= 5 ? '　すごい！' : ''))); }
+
   /* ---------- 2 図をかく ---------- */
   VIEW.zu = function () {
     var kind = 'per', lv = '1';   // タブを開いたら、いつも左端を選んだ状態から（2026-11-15 カワイさん）
-    main.appendChild(el('div', '', say('文を読んで、<b>2本の数直線</b>をかこう。<br>① 線に名前　② 数を目もりに置く　③ 矢印。この3つを何度もくり返すと、どんな問題でも図がかけるようになるよ。')));
-    main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('zuKind', k); fresh(); }));
-    main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('zuLv', k); fresh(); }));
-    var info = el('div', 'nlnote'); main.appendChild(info);
+    fitHead({
+      title: '図をかく', line: '① 線に名前 → ② 数を目もりに → ③ 矢印',
+      say: '文を読んで、<b>2本の数直線</b>をかこう。<br>① 線に名前　② 数を目もりに置く　③ 矢印。この3つを何度もくり返すと、どんな問題でも図がかけるようになるよ。',
+      rows: [{ list: KIND_CHIPS, cur: kind, onPick: function (k) { kind = k; REC.ui('zuKind', k); fresh(); } },
+             { list: NUM_CHIPS, cur: lv, onPick: function (k) { lv = k; REC.ui('zuLv', k); fresh(); } }]
+    });
     var card = el('div', 'card'); main.appendChild(card);
     function fresh() {
       var P = GEN.single(pickCtx(null), pickKind(kind), +lv);
-      var s = REC.d.streak.zu || 0;
-      info.innerHTML = 'ミスなしで続けて ' + s + ' 回' + (s >= 5 ? '　すごい！' : '');
       new Runner(card, P, {
         steps: ['label', 'place', 'arrow'],
         onDone: function (ok) {
           REC.add('zu_' + P.kind, ok); var n = REC.streak('zu', ok);
-          info.innerHTML = 'ミスなしで続けて ' + n + ' 回' + (n >= 5 ? '　すごい！' : '');
-          var R = card.lastChild;
-          var e = el('div', 'fb show ' + (ok ? 'ok' : 'info'), ok ? '<b>ミスなし！</b> この図があれば、式はすぐ立てられるね。' : '図ができたよ。もう1問やると、もっとはやくかけるようになる。');
-          card.appendChild(e);
-          nextBtn(card, 'つぎの図 ▶', function () { fresh(); scrollTo(card); });
+          var h = endHost(card);
+          h.appendChild(el('div', 'fb show ' + (ok ? 'ok' : 'info'), ok ? '<b>ミスなし！</b> この図があれば、式はすぐ立てられるね。' : '図ができたよ。もう1問やると、もっとはやくかけるようになる。'));
+          streakNote(h, n, ok);
+          nextBtn(h, 'つぎの図 ▶', function () { fresh(); scrollTo(card); });
         }
       });
     }
@@ -2304,20 +2378,21 @@ var NL = (function () {
   /* ---------- 3 式と答え ---------- */
   VIEW.shiki = function () {
     var kind = 'per', lv = '1';
-    main.appendChild(el('div', '', say('図はできているよ。<b>矢印を見て式を立てる</b>練習だ。<br>1の列と、わかっている列が矢印でつながっている。もう1本の線にも同じ×や÷をすれば、□が出るよ。')));
-    main.appendChild(chipRow(KIND_CHIPS, kind, function (k) { kind = k; REC.ui('skKind', k); fresh(); }));
-    main.appendChild(chipRow(NUM_CHIPS, lv, function (k) { lv = k; REC.ui('skLv', k); fresh(); }));
-    var info = el('div', 'nlnote'); main.appendChild(info);
+    fitHead({
+      title: '式と答え', line: '矢印を見て式 → 計算して答え',
+      say: '図はできているよ。<b>矢印を見て式を立てる</b>練習だ。<br>1の列と、わかっている列が矢印でつながっている。もう1本の線にも同じ×や÷をすれば、□が出るよ。',
+      rows: [{ list: KIND_CHIPS, cur: kind, onPick: function (k) { kind = k; REC.ui('skKind', k); fresh(); } },
+             { list: NUM_CHIPS, cur: lv, onPick: function (k) { lv = k; REC.ui('skLv', k); fresh(); } }]
+    });
     var card = el('div', 'card'); main.appendChild(card);
     function fresh() {
       var P = GEN.single(pickCtx(null), pickKind(kind), +lv);
-      info.textContent = 'ミスなしで続けて ' + (REC.d.streak.shiki || 0) + ' 回';
       new Runner(card, P, {
         steps: ['expr', 'ans'], exprMode: 'pick', showOnly: true, noNote: true,
         onDone: function (ok) {
           REC.add('shiki_' + P.kind, ok); var n = REC.streak('shiki', ok);
-          info.textContent = 'ミスなしで続けて ' + n + ' 回';
-          nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); });
+          var h = endHost(card); streakNote(h, n, ok);
+          nextBtn(h, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); });
         }
       });
     }
@@ -2341,18 +2416,16 @@ var NL = (function () {
     '5': 'まず<b>1あたり</b>を求めて、それを使ってもう1回。2つの図をつなげて考えよう。',
     '6': 'ぜんぶの型がまざって出るよ。どの量が「1」になるかを、自分で見つけよう。'
   };
+  var BUN_LINE = { '1': 'そろっている量を見つけて比べる', '2': 'よむ → 図 → 式 → 答え', '3': '小数でも図のかき方は同じ', '4': '1あたりを出してから比べる', '5': '1あたり → それを使ってもう1回', '6': 'どの量が「1」かを自分で見つける' };
   function fullCfg(extra) { var c = { steps: ['read', 'label', 'place', 'arrow', 'expr', 'ans'], exprMode: 'build' }; for (var k in extra) c[k] = extra[k]; return c; }
   VIEW.bun = function () {
     var lv = '1';
-    var sayBox = el('div'); main.appendChild(sayBox);
-    main.appendChild(chipRow(BUN_LV, lv, function (k) { lv = k; REC.ui('bunLv', k); fresh(); }));
+    var H = fitHead({ title: '文章題', line: '<span id="bunLine"></span>', say: '', rows: [{ list: BUN_LV, cur: lv, onPick: function (k) { lv = k; REC.ui('bunLv', k); fresh(); } }] });
     var card = el('div', 'card'); main.appendChild(card);
-    var cnt = 0;
     function fresh() {
-      sayBox.innerHTML = say(BUN_SAY[lv]);
+      H.say(BUN_SAY[lv]); var ln = $('#bunLine'); if (ln) ln.textContent = BUN_LINE[lv];
       var L = lv === '6' ? GEN.pick(['1', '2', '3', '4', '5', '2', '3']) : lv;
-      cnt++;
-      var done = function (cat) { return function (ok) { REC.add('bun_' + cat, ok); nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
+      var done = function (cat) { return function (ok) { REC.add('bun_' + cat, ok); nextBtn(endHost(card), 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
       if (L === '1') SameRunner(card, GEN.sameOne(pickCtx(null, { cmp: true })), { onDone: done('same') });
       else if (L === '2' || L === '3') { var P = GEN.single(pickCtx(null), pickKind('mix'), L === '3' ? 2 : 1); new Runner(card, P, fullCfg({ onDone: done(P.kind) })); }
       else if (L === '4') {
@@ -2376,13 +2449,13 @@ var NL = (function () {
       conv: '<b>時速・分速・秒速</b>は、×60 と ÷60 で行き来できる。km と m は 1000倍。図で考えよう。',
       cmp: '速さを比べるときも、<b>どちらかをそろえる</b>。そろえた量じゃない方で比べるよ。'
     };
-    var sayBox = el('div'); main.appendChild(sayBox);
-    main.appendChild(chipRow(MODES, mode, function (k) { mode = k; REC.ui('hyMode', k); fresh(); }));
+    var LINES = { shiki: '速さ＝1時間（1分・1秒）あたりの道のり', conv: '×60・÷60 と ×1000・÷1000 で行き来', cmp: 'どちらかをそろえて比べる' };
+    var H = fitHead({ title: 'はやさ', line: '<span id="hyLine"></span>', say: '', rows: [{ list: MODES, cur: mode, onPick: function (k) { mode = k; REC.ui('hyMode', k); fresh(); } }] });
     var card = el('div', 'card'); main.appendChild(card);
     var rot = 0;
     function fresh() {
-      sayBox.innerHTML = say(SAYS[mode]);
-      var done = function (cat) { return function (ok) { REC.add('haya_' + cat, ok); nextBtn(card, 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
+      H.say(SAYS[mode]); var ln = $('#hyLine'); if (ln) ln.textContent = LINES[mode];
+      var done = function (cat) { return function (ok) { REC.add('haya_' + cat, ok); nextBtn(endHost(card), 'つぎの問題 ▶', function () { fresh(); scrollTo(card); }); }; };
       if (mode === 'shiki') { var P = GEN.single(pickCtx(['haya']), GEN.KINDS[rot++ % 3], Math.random() < 0.6 ? 1 : 2); new Runner(card, P, fullCfg({ onDone: done(P.kind) })); }
       else if (mode === 'conv') ConvertRunner(card, GEN.convert(), { onDone: done('conv') });
       else {
@@ -2397,22 +2470,13 @@ var NL = (function () {
   var YON_NUM = [{ k: '1', h: '整数' }, { k: '2', h: '小数も' }, { k: 'h', h: '速さ' }];
   VIEW.yon = function () {
     var kind = 'per', lv = '1';   // タブを開いたら、いつも左端から
-    document.body.classList.add('yonmode');
-    var head = el('div', 'yonhead'); main.appendChild(head);
-    var panel = el('div', 'yonpanel'); panel.hidden = true;
-    var kRow = chipRow(KIND_CHIPS, kind, function (k) { kind = k; drawHead(); fresh(); });
-    var nRow = chipRow(YON_NUM, lv, function (k) { lv = k; drawHead(); fresh(); });
-    panel.appendChild(el('div', '', say('文章題を読んで、<b>4ます</b>をうめよう。<br>① 2つの量を上と下に　② 文に出てくる数　③ 1と□。<br>1 から「何倍？」の矢印をかくと、もう1つの段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。')));
-    panel.appendChild(kRow); panel.appendChild(nRow);
-    main.appendChild(panel);
+    fitHead({
+      title: '4ます', line: '量を上下に → わかる数 → 1と□ → 矢印 → 式',
+      say: '文章題を読んで、<b>4ます</b>をうめよう。<br>① 2つの量を上と下に　② 文に出てくる数　③ 1と□。<br>1 から「何倍？」の矢印をかくと、もう1つの段にも同じ矢印がかける。そこから <b>かけ算の式</b> が立つよ。',
+      rows: [{ list: KIND_CHIPS, cur: kind, onPick: function (k) { kind = k; fresh(); } },
+             { list: YON_NUM, cur: lv, onPick: function (k) { lv = k; fresh(); } }]
+    });
     var card = el('div', 'card'); main.appendChild(card);
-    function name(list, k) { for (var i = 0; i < list.length; i++) if (list[i].k === k) return list[i].h; return ''; }
-    function drawHead() {
-      head.innerHTML = '<span class="yh-hk">' + hakase(34) + '</span><span class="yh-t"><b>4ます</b>　量を上下に → わかる数 → 1と□ → 矢印 → 式</span>' +
-        '<button class="yh-set" aria-expanded="' + !panel.hidden + '">⚙ ' + name(KIND_CHIPS, kind) + '・' + name(YON_NUM, lv) + (panel.hidden ? ' ▾' : ' ▴') + '</button>';
-    }
-    head.onclick = function (e) { if (!e.target.closest('.yh-set')) return; panel.hidden = !panel.hidden; drawHead(); };
-    drawHead();
     function fresh() {
       var P = lv === 'h' ? GEN.single(pickCtx(['haya']), pickKind(kind), Math.random() < 0.6 ? 1 : 2) : GEN.single(pickCtx(null), pickKind(kind), +lv);
       new YonRunner(card, P, {
@@ -2436,8 +2500,13 @@ var NL = (function () {
   function noteGate(host, c) {
     var prob = host.querySelector('.prob'); if (!prob) return;
     var top = prob; while (top.parentNode !== host) top = top.parentNode;
-    var rest = [], n = top.nextSibling;
-    while (n) { if (n.nodeType === 1) rest.push([n, n.style.display]); n = n.nextSibling; }
+    var rest = [], n;
+    if (top.classList.contains('cols') && prob.parentNode.parentNode === top) {
+      var colL = prob.parentNode;
+      for (n = prob.nextSibling; n; n = n.nextSibling) if (n.nodeType === 1) rest.push([n, n.style.display]);
+      for (n = colL.nextSibling; n; n = n.nextSibling) if (n.nodeType === 1) rest.push([n, n.style.display]);
+      top = prob; host = colL;
+    } else for (n = top.nextSibling; n; n = n.nextSibling) if (n.nodeType === 1) rest.push([n, n.style.display]);
     var st = NOTE_STEPS[c] || NOTE_STEPS.def;
     var g = el('div', 'notego', '<div class="ng1">✏️ まず、ノートに図をかこう</div>' +
       '<ol>' + st.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ol>' +
@@ -2452,6 +2521,7 @@ var NL = (function () {
   var CAT = { per: '1あたりを求める', total: '全体を求める', count: 'いくつ分を求める', cmp: 'くらべる', two: '2だんかい', conv: '単位をかえる', trick: '考え方' };
   var CAT_GO = { per: 'shiki', total: 'shiki', count: 'shiki', cmp: 'bun', two: 'bun', conv: 'haya', trick: 'haya' };
   VIEW.test = function () {
+    document.body.classList.add('fit');
     var b = REC.d.test.best;
     main.appendChild(el('div', '', say('10問のうでだめし。1問ずつ、<b>まずノートに図をかいてから</b>答えよう。図がかければ、式が立つよ。' + (b != null ? '<br>これまでのいちばん：<b>' + b + '問</b>' : ''))));
     var card = el('div', 'card'); main.appendChild(card);
@@ -2489,7 +2559,7 @@ var NL = (function () {
           var R = new Runner(host, q, { steps: ['expr', 'ans'], exprMode: 'pick', showOnly: true, noDiagram: true, noNote: true, qno: qno, onDone: done });
           var sb = el('button', 'btn2', '図を見る'); sb.style.marginTop = '8px';
           sb.onclick = function () { R.eNLwrap.style.display = ''; mountNL(R.eNL, R.S); sb.remove(); };
-          host.insertBefore(sb, R.eSteps.nextSibling);
+          R.eSteps.parentNode.insertBefore(sb, R.eSteps.nextSibling);
         }
         else if (it.c === 'cmp') CompareRunner(host, q, { mode: 'quick', qno: qno, onDone: done });
         else if (it.c === 'two') TwoRunner(host, q, { quick: true, qno: qno, onDone: done });
@@ -2518,6 +2588,7 @@ var NL = (function () {
   VIEW.shikumi = function () {
     var ex = 'komi';
     var EX = [{ k: 'komi', h: '混みぐあい' }, { k: 'haya', h: '速さ' }, { k: 'three', h: '3つの式' }];
+    document.body.classList.add('fit');
     main.appendChild(chipRow(EX, ex, function (k) { ex = k; REC.ui('shEx', k); run(); }));
     var card = el('div', 'card'); main.appendChild(card);
     function run() { if (card._off) card._off(); card.onclick = null; SHIKUMI[ex](card); }
@@ -2728,13 +2799,14 @@ var NL = (function () {
         P.expr = kind === 'per' ? { l: s.a, op: '÷', r: s.b } : kind === 'total' ? { l: s.u, op: '×', r: s.b } : { l: s.a, op: '÷', r: s.u };
         P.segs = GEN.segs(c.t[kind], { a: s.a, b: s.b, u: s.u });
         var ans = kind === 'per' ? s.u : kind === 'total' ? s.a : s.b;
-        card.innerHTML = say('どの問題も、<b>1の列</b>と<b>わかっている列</b>を矢印でつなぐ。<br>□がどこにあっても、<b>図の形は同じ</b>だよ。場面と求めるものを切りかえてみよう。') +
+        // 左＝文と図、右＝説明・切りかえ・式（横長の画面で1画面に収める）
+        var probHtml = '<div class="prob"><span class="ic">' + c.icon + '</span>' + P.segs.map(function (g) { return g.n != null ? '<span class="tok ' + (g.k === 'b' ? 'bot' : 'top') + '">' + F(g.n) + '</span>' : esc(g.t); }).join('') + '</div>';
+        card.innerHTML = '<div class="cols"><div class="yl">' + probHtml + '<div class="nlbox"></div></div><div class="yr">' +
+          say('どの問題も、<b>1の列</b>と<b>わかっている列</b>を矢印でつなぐ。<br>□がどこにあっても、<b>図の形は同じ</b>だよ。場面と求めるものを切りかえてみよう。') +
           '<div class="chips">' + sets.map(function (x, j) { return '<button class="chip' + (j === si ? ' on' : '') + '" data-s="' + j + '">' + x.nm + '</button>'; }).join('') + '</div>' +
           '<div class="chips">' + KIND_CHIPS.slice(0, 3).map(function (x) { return '<button class="chip' + (x.k === kind ? ' on' : '') + '" data-k="' + x.k + '">' + x.h + '</button>'; }).join('') + '</div>' +
-          '<div class="prob"><span class="ic">' + c.icon + '</span>' + P.segs.map(function (g) { return g.n != null ? '<span class="tok ' + (g.k === 'b' ? 'bot' : 'top') + '">' + F(g.n) + '</span>' : esc(g.t); }).join('') + '</div>' +
-          '<div class="nlbox"></div>' +
           '<div class="note"><h4>式</h4>' + (kind === 'count' ? '<div class="ln">' + F(s.u) + ' × □ ＝ ' + F(s.a) + '</div>' : '') +
-          '<div class="ln">□ ＝ ' + F(P.expr.l) + ' ' + P.expr.op + ' ' + F(P.expr.r) + ' ＝ ' + F(ans) + '</div></div>';
+          '<div class="ln">□ ＝ ' + F(P.expr.l) + ' ' + P.expr.op + ' ' + F(P.expr.r) + ' ＝ ' + F(ans) + '</div></div></div></div>';
         mountNL($('.nlbox', card), { P: P, mode: 'show', final: true, flip: false, lab: null, arrow: 3, prop: true, slot: {} });
       }
       card.onclick = function (e) {
