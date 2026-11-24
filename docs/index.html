@@ -290,6 +290,23 @@ body.fit .card{padding:12px 16px}
 .cols.flat .yr .ctrl{margin-top:0}
 /* 2だんかいの①が終わったら、式だけの1行に */
 .cols.flat .yl{display:none}
+/* iPad縦など：縦長のタブレットはキーパッドを横長の2段に（1画面に収める） */
+@media (min-width:600px) and (max-aspect-ratio:1/1){
+  body.fit .kp{grid-template-columns:repeat(8,1fr);grid-template-areas:"k1 k2 k3 k4 k5 k6 k7 bs" "k8 k9 k0 dt cl cl en en";max-width:none;gap:7px}
+  body.fit .kp button{height:50px}
+  body.fit .kp .ent{grid-row:auto;height:50px}
+  body.fit .kp [data-k="1"]{grid-area:k1} body.fit .kp [data-k="2"]{grid-area:k2} body.fit .kp [data-k="3"]{grid-area:k3}
+  body.fit .kp [data-k="4"]{grid-area:k4} body.fit .kp [data-k="5"]{grid-area:k5} body.fit .kp [data-k="6"]{grid-area:k6}
+  body.fit .kp [data-k="7"]{grid-area:k7} body.fit .kp [data-k="8"]{grid-area:k8} body.fit .kp [data-k="9"]{grid-area:k9}
+  body.fit .kp [data-k="0"]{grid-area:k0} body.fit .kp [data-k="."]{grid-area:dt} body.fit .kp [data-k="bs"]{grid-area:bs}
+  body.fit .kp [data-k="clr"]{grid-area:cl} body.fit .kp [data-k="ent"]{grid-area:en}
+  body.fit .cols.flat .bigexpr{font-size:22px}
+  body.fit .cmpw .ctab th,body.fit .cmpw .ctab td{padding:4px 14px}
+  body.fit .kp button,body.fit .kp .ent{height:44px}
+  body.fit .opts.one{display:flex;flex-wrap:wrap}
+  body.fit .opts.one .opt{max-width:100%}
+  body.fit .note .nlbox svg{max-height:min(300px,28vh);width:100%}
+}
 @media (min-width:900px) and (min-aspect-ratio:1/1){
   body.fit main{max-width:1280px}
   body.fit .bar-in,body.fit .tabs{max-width:1280px}
